@@ -403,7 +403,7 @@ class _KabulDetayState extends State<KabulDetay> {
                     Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => talepTamamlandi()));
+                            builder: (context) => talepTamamlandi(title: '',companyName: '',)));
                   },
                   child: const Text(
                     'Organizasyonun yapıldığını onayla',

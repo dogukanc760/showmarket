@@ -2,14 +2,13 @@ import 'package:carousel_slider/carousel_controller.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-final List<String> imgList = [
-  'assets/anasayfaslider.jpg',
-  'assets/anasayfaslider.jpg',
-  'assets/anasayfaslider.jpg',
-  'assets/anasayfaslider.jpg'
-];
+import 'package:showmarket/models/category.dart';
 
+final List<String> imgList = [];
+final List<Category> category = [];
 final List<String> categoryList = [
   '',
   'Geziler',
@@ -38,6 +37,7 @@ final List<String> fastService = [
   'Etkinlik-1'
 ];
 
+
 class Anasayfa extends StatefulWidget {
   const Anasayfa({Key? key}) : super(key: key);
 
@@ -46,6 +46,7 @@ class Anasayfa extends StatefulWidget {
 }
 
 class _AnasayfaState extends State<Anasayfa> {
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -77,9 +78,87 @@ class HomePages extends StatefulWidget {
 }
 
 class _HomePagesState extends State<HomePages> {
+
+
+
+  //get slider
+  Future<Widget> login(String mail, String password, BuildContext context) async {
+    final response = await http.get(
+      Uri.parse('https://showmarket-api.herokuapp.com/api/slider'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+
+    );
+
+    if (response.statusCode == 200) {
+      print(response.statusCode);
+
+      var result = jsonDecode(response.body);
+      //  print(result['data'][0]['_id']);
+      for(var i = 0; i<result.length; i++){
+        setState(() {
+          print(result['data'][i]['sliderUrl']);
+          imgList.add("https://showmarket-api.herokuapp.com/images/"+result['data'][i]['sliderUrl']);
+        });
+
+        print(imgList);
+      }
+
+    } else {
+      throw Exception();
+    }
+    return Flexible(child: Text(''));
+  }
+
+//get category
+  Future<ListView> getCategory() async {
+    category.clear();
+    final response = await http.get(
+      Uri.parse('https://showmarket-api.herokuapp.com/api/category'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+
+    );
+
+    if (response.statusCode == 200) {
+      print(response.statusCode);
+
+      var result = jsonDecode(response.body);
+      //  print(result['data'][0]['_id']);
+      for(var i = 0; i<result.length; i++){
+        print(result['data'][i]);
+        setState(() {
+          category.add(Category(name: result['data'][i]['name'], img: result['data'][i]['img'],
+              isActive: result['data'][i]['isActive'], showHome: result['data'][i]['showHome'], id: result['data'][i]['_id']));
+
+        });
+
+        print(category[i]);
+      }
+      return ListView(
+
+        children: [
+
+        ],
+      );
+    } else {
+      throw Exception();
+    }
+  }
   @override
+  void initState(){
+    super.initState();
+    getCategory();
+    login('mail', 'password', context);
+  }
+  @override
+
   Widget build(BuildContext context) {
+
     return Container(
+
         child: Column(
       children: [
         Padding(
@@ -236,7 +315,9 @@ class _HomePagesState extends State<HomePages> {
           height: 35,
           color: Colors.white10,
           child: TextButton(
-            onPressed: () {},
+            onPressed: () {
+              getCategory();
+            },
             child: RichText(
               text: TextSpan(
                 children: [
@@ -270,176 +351,55 @@ class _HomePagesState extends State<HomePages> {
                   width: MediaQuery.of(context).size.width,
                   child: Row(
                     children: [
-                      SizedBox(width: 12),
-                      Column(
-                        children: [
-                          InkWell(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 5, left: 10),
-                              child: Container(
-                                height: 53,
-                                width: 53,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.only(
-                                      bottomLeft: Radius.circular(30.0),
-                                      topRight: Radius.circular(30.0),
-                                      bottomRight: Radius.circular(40.0),
-                                      topLeft: Radius.circular(40.0)),
-                                  color: Color(0xffe3edf6),
-                                  image: DecorationImage(
-                                    image: AssetImage('assets/ikon1.png'),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: category.length,
+                        itemBuilder: (BuildContext context, int index){
+                          return Container(
+                            child: Column(
+                              children: [
+                                Flexible(
+                                  child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 5, left: 10),
+                                      child: Container(
+                                        height: 53,
+                                        width: 53,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.only(
+                                              bottomLeft: Radius.circular(30.0),
+                                              topRight: Radius.circular(30.0),
+                                              bottomRight: Radius.circular(40.0),
+                                              topLeft: Radius.circular(40.0)),
+                                          color: Color(0xffe3edf6),
+                                          image: DecorationImage(
+                                            image: NetworkImage('https://showmarket-api.herokuapp.com/images/'+category[index].img),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      print("tapped on container");
+                                    },
                                   ),
                                 ),
-                              ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2, left: 12),
+                                  child: Text(category[index].name,
+                                      style: TextStyle(
+                                          fontSize: 11, color: Colors.white)),
+                                )
+                              ],
                             ),
-                            onTap: () {
-                              print("tapped on container");
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2, left: 12),
-                            child: Text('Sinema',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.white)),
-                          )
-                        ],
+                          );
+                        },
+
+                        scrollDirection: Axis.horizontal,
+                        physics: NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.all(0),
+
                       ),
-                      SizedBox(width: 17),
-                      Column(
-                        children: [
-                          InkWell(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 5),
-                              child: Container(
-                                height: 53,
-                                width: 53,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.only(
-                                      bottomLeft: Radius.circular(30.0),
-                                      topRight: Radius.circular(30.0),
-                                      bottomRight: Radius.circular(40.0),
-                                      topLeft: Radius.circular(40.0)),
-                                  color: Color(0xFFffeea4),
-                                  image: DecorationImage(
-                                    image: AssetImage('assets/ikon2.png'),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            onTap: () {
-                              print("tapped on container");
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text('Tiyatro',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.white)),
-                          )
-                        ],
-                      ),
-                      SizedBox(width: 17),
-                      Column(
-                        children: [
-                          InkWell(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 5),
-                              child: Container(
-                                height: 53,
-                                width: 53,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.only(
-                                      bottomLeft: Radius.circular(30.0),
-                                      topRight: Radius.circular(30.0),
-                                      bottomRight: Radius.circular(40.0),
-                                      topLeft: Radius.circular(40.0)),
-                                  color: Color(0xFFd4ff86),
-                                  image: DecorationImage(
-                                    image: AssetImage('assets/ikon3.png'),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            onTap: () {
-                              print("tapped on container");
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text('Sirk',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.white)),
-                          )
-                        ],
-                      ),
-                      SizedBox(width: 17),
-                      Column(
-                        children: [
-                          InkWell(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 5),
-                              child: Container(
-                                height: 53,
-                                width: 53,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.only(
-                                      bottomLeft: Radius.circular(30.0),
-                                      topRight: Radius.circular(30.0),
-                                      bottomRight: Radius.circular(40.0),
-                                      topLeft: Radius.circular(40.0)),
-                                  color: Color(0xFFf6baba),
-                                  image: DecorationImage(
-                                    image: AssetImage('assets/ikon4.png'),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            onTap: () {
-                              print("tapped on container");
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text('Dans',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.white)),
-                          )
-                        ],
-                      ),
-                      SizedBox(width: 17),
-                      Column(
-                        children: [
-                          InkWell(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 5),
-                              child: Container(
-                                height: 53,
-                                width: 53,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.only(
-                                      bottomLeft: Radius.circular(30.0),
-                                      topRight: Radius.circular(30.0),
-                                      bottomRight: Radius.circular(40.0),
-                                      topLeft: Radius.circular(40.0)),
-                                  color: Color(0xFfdddfde),
-                                  image: DecorationImage(
-                                    image: AssetImage('assets/ikon5.png'),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            onTap: () {
-                              print("tapped on container");
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text('Müzik',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.white)),
-                          )
-                        ],
-                      ),
+
                     ],
                   ),
                 ),
@@ -474,7 +434,7 @@ class _HomePagesState extends State<HomePages> {
                       child: ListView.builder(
                         shrinkWrap: true,
                         scrollDirection: Axis.horizontal,
-                        itemCount: 8,
+                        itemCount: category.length,
                         itemBuilder: (BuildContext context, int index) => Card(
                           elevation: 0,
                           child: Padding(
@@ -489,8 +449,8 @@ class _HomePagesState extends State<HomePages> {
                                     Card(
                                       child: Padding(
                                         padding: const EdgeInsets.all(4),
-                                        child: Image.asset(
-                                          'assets/toplu${index + 1}.png',
+                                        child: Image.network(
+                                          'https://showmarket-api.herokuapp.com/images/'+category[index].img,
                                           height: 50,
                                           width: 50,
                                           fit: BoxFit.fill,
@@ -582,7 +542,7 @@ class _HomePagesState extends State<HomePages> {
                       child: ListView.builder(
                         shrinkWrap: true,
                         scrollDirection: Axis.horizontal,
-                        itemCount: 8,
+                        itemCount: category.length,
                         itemBuilder: (BuildContext context, int index) => Card(
                           elevation: 0,
                           child: Padding(
@@ -597,8 +557,8 @@ class _HomePagesState extends State<HomePages> {
                                     Card(
                                       child: Padding(
                                         padding: const EdgeInsets.all(4),
-                                        child: Image.asset(
-                                          'assets/toplu${index + 1}.png',
+                                        child: Image.network(
+                                          'https://showmarket-api.herokuapp.com/images/'+category[index].img,
                                           height: 50,
                                           width: 50,
                                           fit: BoxFit.fill,
@@ -630,6 +590,9 @@ class _HomePagesState extends State<HomePages> {
       ],
     ));
   }
+
+
+
 }
 
 class ImageSliderDemo extends StatelessWidget {
@@ -659,7 +622,7 @@ class ImageSliderDemo extends StatelessWidget {
                     ),
                     child: Center(
                         child:
-                            Image.asset(item, fit: BoxFit.fill, width: 1000)),
+                            Image.network(item, fit: BoxFit.fill, width: 1000)),
                   ))
               .toList(),
         ),
@@ -698,7 +661,7 @@ class ImageSliderDemo_2 extends StatelessWidget {
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.black,
+                          color: Colors.transparent,
                           borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(40),
                               topRight: Radius.circular(40),
@@ -706,41 +669,17 @@ class ImageSliderDemo_2 extends StatelessWidget {
                               bottomRight: Radius.circular(40)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withOpacity(0.5),
+                              color: Colors.white,
                               spreadRadius: 5,
-                              blurRadius: 7,
+                              blurRadius: 10,
                               offset:
                                   Offset(0, 3), // changes position of shadow
                             ),
                           ],
                         ),
-                        child: Image.asset(item, fit: BoxFit.fill, width: 1000),
+                        child: Center(child: Image.network(item, fit: BoxFit.fitWidth, width: 230, height: 170,)),
                       ),
-                      Container(
-                        height: 40,
-                        width: 150,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10),
-                              bottomLeft: Radius.circular(10),
-                              bottomRight: Radius.circular(10)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.5),
-                              spreadRadius: 5,
-                              blurRadius: 7,
-                              offset:
-                                  Offset(0, 3), // changes position of shadow
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          'Her Perşembe Saat 10:00`da!',
-                          style: TextStyle(),
-                        ),
-                      ),
+
                     ],
                   ),
                 ),
@@ -840,3 +779,4 @@ final List<Widget> imageSliders = imgList
       ),
     )
     .toList();
+

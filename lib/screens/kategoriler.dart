@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
+import 'package:showmarket/models/category.dart';
 import 'package:showmarket/screens/hizmetkarsilama.dart';
+import 'package:http/http.dart' as http;
 
 final List<String> categoryList = [
   '',
@@ -16,6 +20,7 @@ final List<String> categoryList = [
   'Açık Alan',
   'Kapalı Alan',
 ];
+final List<Category> category = [];
 
 class Kategoriler extends StatefulWidget {
   const Kategoriler({Key? key}) : super(key: key);
@@ -55,6 +60,45 @@ class KategoriListe extends StatefulWidget {
 }
 
 class _KategoriListeState extends State<KategoriListe> {
+  Future<ListView> getCategory() async {
+    category.clear();
+    final response = await http.get(
+      Uri.parse('https://showmarket-api.herokuapp.com/api/category'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print(response.statusCode);
+
+      var result = jsonDecode(response.body);
+
+      //  print(result['data'][0]['_id']);
+      for (var i = 0; i < result.length; i++) {
+        setState(() {
+          category.add(Category(
+              name: result['data'][i]['name'],
+              img: result['data'][i]['img'],
+              isActive: result['data'][i]['isActive'],
+              showHome: result['data'][i]['showHome'],
+              id: result['data'][i]['_id']));
+        });
+      }
+      return ListView(
+        children: [],
+      );
+    } else {
+      throw Exception();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getCategory();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -129,7 +173,7 @@ class _KategoriListeState extends State<KategoriListe> {
                           child: ListView.builder(
                             shrinkWrap: true,
                             scrollDirection: Axis.vertical,
-                            itemCount: 11,
+                            itemCount: category.length,
                             itemBuilder: (BuildContext context, int index) =>
                                 Row(
                               children: [
@@ -153,8 +197,9 @@ class _KategoriListeState extends State<KategoriListe> {
                                               child: Padding(
                                                 padding:
                                                     const EdgeInsets.all(8.0),
-                                                child: Image.asset(
-                                                  'assets/kategori_${index + 1}.png',
+                                                child: Image.network(
+                                                  'https://showmarket-api.herokuapp.com/images/' +
+                                                      category[index].img,
                                                   height: 35,
                                                   width: 35,
                                                   fit: BoxFit.fill,
@@ -166,7 +211,7 @@ class _KategoriListeState extends State<KategoriListe> {
                                                   const EdgeInsets.fromLTRB(
                                                       20, 0, 0, 0),
                                               child: Text(
-                                                '${categoryList[index + 1]}',
+                                                category[index].name,
                                                 style: TextStyle(fontSize: 18),
                                               ),
                                             ),
@@ -178,7 +223,20 @@ class _KategoriListeState extends State<KategoriListe> {
                                                     context,
                                                     MaterialPageRoute(
                                                         builder: (context) =>
-                                                            HizmetKarsilama()));
+                                                            HizmetKarsilama(
+                                                              categoryId:
+                                                                  category[
+                                                                          index]
+                                                                      .id,
+                                                              categoryName:
+                                                                  category[
+                                                                          index]
+                                                                      .name,
+                                                              categoryImg:
+                                                                  category[
+                                                                          index]
+                                                                      .img,
+                                                            )));
                                               },
                                               icon: Icon(
                                                 Icons.arrow_forward_ios,

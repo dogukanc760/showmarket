@@ -4,7 +4,9 @@ import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
 import 'package:showmarket/screens/anasayfa.dart';
 
 class talepTamamlandi extends StatefulWidget {
-  const talepTamamlandi({Key? key}) : super(key: key);
+  final String companyName;
+  final String title;
+  const talepTamamlandi({required this.companyName, required this.title}) : super();
 
   @override
   _talepTamamlandiState createState() => _talepTamamlandiState();
@@ -16,7 +18,7 @@ class _talepTamamlandiState extends State<talepTamamlandi> {
     return MaterialApp(
       home: Scaffold(
         body: SafeArea(
-          child: SingleChildScrollView(child: tamamlandiYorum()),
+          child: SingleChildScrollView(child: tamamlandiYorum(companyName: widget.companyName, title: widget.title,)),
         ),
         bottomNavigationBar: NavigationBottom(),
       ),
@@ -25,7 +27,9 @@ class _talepTamamlandiState extends State<talepTamamlandi> {
 }
 
 class tamamlandiYorum extends StatefulWidget {
-  const tamamlandiYorum({Key? key}) : super(key: key);
+  final String companyName;
+  final String title;
+  const tamamlandiYorum({required this.companyName, required this.title}) : super();
 
   @override
   _tamamlandiYorumState createState() => _tamamlandiYorumState();

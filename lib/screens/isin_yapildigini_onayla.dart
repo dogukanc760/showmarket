@@ -4,7 +4,10 @@ import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
 import 'package:showmarket/screens/anasayfa.dart';
 
 class IsinYapildiginiOnayla extends StatelessWidget {
-  const IsinYapildiginiOnayla({Key? key}) : super(key: key);
+  final String companyName;
+  final String title;
+  const IsinYapildiginiOnayla({required this.companyName, required this.title}) : super();
+
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +21,7 @@ class IsinYapildiginiOnayla extends StatelessWidget {
           right: true,
           child: SingleChildScrollView(
             child: Stack(
-              children: [OnaylamaKismi()],
+              children: [OnaylamaKismi(title: this.title, companyName: this.companyName,)],
             ),
           ),
         ),
@@ -29,7 +32,9 @@ class IsinYapildiginiOnayla extends StatelessWidget {
 }
 
 class OnaylamaKismi extends StatefulWidget {
-  const OnaylamaKismi({Key? key}) : super(key: key);
+  final String companyName;
+  final String title;
+  const OnaylamaKismi({required this.companyName, required this.title}) : super();
 
   @override
   _OnaylamaKismiState createState() => _OnaylamaKismiState();
@@ -63,7 +68,7 @@ class _OnaylamaKismiState extends State<OnaylamaKismi> {
         Column(
           children: [
             Text(
-              'İşletme Adı',
+              widget.companyName,
               style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -73,7 +78,7 @@ class _OnaylamaKismiState extends State<OnaylamaKismi> {
               height: 20,
             ),
             Text(
-              'Salon Adı',
+              widget.title,
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
