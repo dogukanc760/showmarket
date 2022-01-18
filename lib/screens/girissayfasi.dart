@@ -357,12 +357,14 @@ Future<User> login(String mail, String password, BuildContext context) async {
     print(response.statusCode);
     final prefs = await SharedPreferences.getInstance();
     var result = jsonDecode(response.body);
+    print(result['data']);
     prefs.setString('username', result['data']['mail']);
     prefs.setString('name', result['data']['name']);
     prefs.setString('surname', result['data']['surname']);
     prefs.setString('gsm', result['data']['gsm']);
     prefs.setString('id', result['data']['_id']);
-
+    prefs.setString('adress', jsonEncode(result['data']['adress']));
+    print(prefs.getString('adress'));
     foo(context);
 
     return User.fromJson(jsonDecode(response.body));

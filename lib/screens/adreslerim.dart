@@ -1,6 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
-
+import 'package:http/http.dart' as http;
 class Adreslerim extends StatelessWidget {
   const Adreslerim({Key? key}) : super(key: key);
 
@@ -31,7 +33,29 @@ class AdresIcerik extends StatefulWidget {
   @override
   _AdresIcerikState createState() => _AdresIcerikState();
 }
+String userId= '';
+String name ='';
+String responses='';
+Future<String> login(String password) async {
+  final response = await http.put(
+    Uri.parse('https://showmarket-api.herokuapp.com/api/user/'+userId),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(
+        <String, String>{'password': name}),
+  );
 
+  if (response.statusCode == 201) {
+    print(response.statusCode);
+    responses = '201';
+    return '201';
+
+  } else {
+    return '500';
+    throw Exception();
+  }
+}
 class _AdresIcerikState extends State<AdresIcerik> {
   @override
   Widget build(BuildContext context) {

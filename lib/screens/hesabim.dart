@@ -1,13 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
+import 'package:showmarket/main.dart';
 import 'package:showmarket/screens/guvenlik.dart';
 import 'package:showmarket/screens/profilim.dart';
 
 import 'adreslerim.dart';
 
-class Hesabim extends StatelessWidget {
+class Hesabim extends StatefulWidget {
   const Hesabim({Key? key}) : super(key: key);
+
+  @override
+  State<Hesabim> createState() => _HesabimState();
+}
+String name='';
+String userId = '';
+void destroySession(BuildContext context)async{
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => MyApp()),
+  );
+}
+
+class _HesabimState extends State<Hesabim> {
+
+  final passwordController = TextEditingController();
+  final passwordFinalController = TextEditingController();
+  void getSession() async {
+
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      username = prefs.getString('username').toString();
+      name = prefs.getString('name').toString();
+      surname = prefs.getString('surname').toString();
+      gsm = prefs.getString('gsm').toString();
+      userId = prefs.getString('id').toString();
+    });
+
+    print(userId+username+name);
+
+  }
+  @override
+  void initState() {
+    getSession();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +97,7 @@ class Hesabim extends StatelessWidget {
                                 child: Center(
                                   child: Stack(children: [
                                     Text(
-                                      'Ahmet Müşteri',
+                                      name,
                                       style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold),
@@ -211,7 +251,9 @@ class Hesabim extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
                         child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              destroySession(context);
+                            },
                             child: Text('Çıkış Yap',
                                 style: TextStyle(
                                     color: Colors.black, fontSize: 18))),

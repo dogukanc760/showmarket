@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
+import 'package:http/http.dart' as http;
 
 class Guvenlik extends StatelessWidget {
   const Guvenlik({Key? key}) : super(key: key);
@@ -24,7 +28,29 @@ class Guvenlik extends StatelessWidget {
     );
   }
 }
+String userId= '';
+String name ='';
+String responses='';
+Future<String> login(String password) async {
+  final response = await http.put(
+    Uri.parse('https://showmarket-api.herokuapp.com/api/user/'+userId),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(
+        <String, String>{'password': name}),
+  );
 
+  if (response.statusCode == 201) {
+    print(response.statusCode);
+    responses = '201';
+    return '201';
+
+  } else {
+    return '500';
+    throw Exception();
+  }
+}
 class GuvenlikGuncelle extends StatefulWidget {
   const GuvenlikGuncelle({Key? key}) : super(key: key);
 
@@ -33,10 +59,23 @@ class GuvenlikGuncelle extends StatefulWidget {
 }
 
 class _GuvenlikGuncelleState extends State<GuvenlikGuncelle> {
+  void getSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    userId = prefs.getString('id').toString();
+    name = prefs.getString('name').toString();
+  }
   final _formKey = GlobalKey<FormState>();
   bool _passwordVisible = true;
   bool _offer = false;
   bool _offer1 = false;
+  final passwordController = TextEditingController();
+  final passwordFinalController = TextEditingController();
+
+  @override
+  void initState() {
+    getSession();
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -77,7 +116,7 @@ class _GuvenlikGuncelleState extends State<GuvenlikGuncelle> {
                             child: Center(
                               child: Stack(children: [
                                 Text(
-                                  'Ahmet Müşteri',
+                                  name,
                                   style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold),
@@ -150,6 +189,7 @@ class _GuvenlikGuncelleState extends State<GuvenlikGuncelle> {
               padding: const EdgeInsets.fromLTRB(40, 10, 40, 0),
               child: TextFormField(
                 obscureText: _passwordVisible,
+                controller:passwordController,
                 enableSuggestions: false,
                 autocorrect: false,
                 // The validator receives the text that the user has entered.
@@ -171,6 +211,7 @@ class _GuvenlikGuncelleState extends State<GuvenlikGuncelle> {
               padding: const EdgeInsets.fromLTRB(40, 10, 40, 15),
               child: TextFormField(
                 obscureText: _passwordVisible,
+                controller: passwordFinalController,
                 enableSuggestions: false,
                 autocorrect: false,
                 // The validator receives the text that the user has entered.
@@ -202,7 +243,26 @@ class _GuvenlikGuncelleState extends State<GuvenlikGuncelle> {
                         style: BorderStyle.solid),
                     borderRadius: BorderRadius.circular(45),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    const success = SnackBar(
+                      content: Text('Güncelleme Başarılı!'),
+                    );
+                    const wrong = SnackBar(
+                      content: Text('Parola Uyuşmuyor veya Parolanız Boş!'),
+                    );
+                    const failed = SnackBar(
+                      content: Text('Güncelleme Başarısız!'),
+                    );
+                    if(passwordController.text != passwordFinalController.text
+                    ||passwordController.text.isEmpty||passwordFinalController.text.isEmpty){
+                      ScaffoldMessenger.of(context).showSnackBar(wrong);
+                    }
+                    else{
+                      login(passwordController.text);
+                      responses=='201'?ScaffoldMessenger.of(context).showSnackBar(success)
+                          :ScaffoldMessenger.of(context).showSnackBar(failed);
+                    }
+                  },
                   child: const Text('Güncelle'),
                 ),
               ),

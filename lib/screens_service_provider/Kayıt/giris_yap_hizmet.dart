@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:showmarket/models/user_model.dart';
+import 'package:showmarket/screens/anasayfa.dart';
 import 'package:showmarket/screens/girissayfasi.dart';
 import 'package:showmarket/screens_service_provider/Kay%C4%B1t/kayit_tercih.dart';
+import 'package:showmarket/screens_service_provider/anasayfa_hv.dart';
 import 'package:showmarket/screens_service_provider/karsilama_hizmet.dart';
-
+import 'package:http/http.dart' as http;
 import 'kayit_tercih.dart';
 
 class GirisHizmet extends StatelessWidget {
@@ -30,6 +33,11 @@ class MyCustomForm extends StatefulWidget {
   }
 }
 
+Future<User>? _futureUser;
+String username = "";
+String password = "";
+bool _showCircle = true;
+
 // Create a corresponding State class.
 // This class holds data related to the form.
 class MyCustomFormState extends State<MyCustomForm> {
@@ -41,7 +49,16 @@ class MyCustomFormState extends State<MyCustomForm> {
   final _formKey = GlobalKey<FormState>();
   bool _passwordVisible = true;
 
+  final usernames = TextEditingController();
+  final passwords = TextEditingController();
+
   @override
+  void dispose() {
+    usernames.dispose();
+    passwords.dispose();
+    super.dispose();
+  }
+
   Widget build(BuildContext context) {
     // Full screen width and height
     double width = MediaQuery.of(context).size.width;
@@ -99,6 +116,9 @@ class MyCustomFormState extends State<MyCustomForm> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(40, 40, 40, 0),
                     child: TextFormField(
+                      controller: usernames,
+                      keyboardType: TextInputType.text,
+                      maxLength: 35,
                       style: TextStyle(fontSize: 14),
                       // The validator receives the text that the user has entered.
                       decoration: InputDecoration(
@@ -140,6 +160,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(40, 10, 40, 0),
                   child: TextFormField(
+                    controller: passwords,
                     style: TextStyle(fontSize: 12),
                     obscureText: _passwordVisible,
                     enableSuggestions: false,
@@ -178,7 +199,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                 Row(
                   children: [
                     Padding(
-                      padding: EdgeInsets.only(left: 30),
+                      padding: const EdgeInsets.only(left: 30),
                       child: TextButton(
                           onPressed: () {
                             Navigator.push(
@@ -228,19 +249,42 @@ class MyCustomFormState extends State<MyCustomForm> {
                           borderRadius: BorderRadius.circular(45),
                         ),
                         onPressed: () {
-                          // Validate returns true if the form is valid, or false otherwise.
-                          /* if (_formKey.currentState!.validate()) {
-                            // If the form is valid, display a snackbar. In the real world,
-                            // you'd often call a server or save the information in a database.
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Processing Data')),
+                          if (!username.isEmpty) {
+                            final snackBar = SnackBar(
+                              content: const Text(
+                                  'Giriş Başarılı Yönlendiriliyorsunuz...'),
+                              action: SnackBarAction(
+                                label: 'Kapat',
+                                onPressed: () {
+                                  // Some code to undo the change.
+                                },
+                              ),
                             );
-                          }*/
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => Karsilama_Hizmet()),
-                          );
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(snackBar);
+                          } else if (username.length < 0) {
+                            final snackBar = SnackBar(
+                              content: const Text('Giriş Başarısız!'),
+                              action: SnackBarAction(
+                                label: 'Kapat',
+                                onPressed: () {
+                                  // Some code to undo the change.
+                                },
+                              ),
+                            );
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(snackBar);
+                          }
+                          final User user = new User(
+                              username: usernames.text,
+                              password: passwords.text,
+                              mail: usernames.text,
+                              gsm: usernames.text);
+                          var result =
+                              login(usernames.text, passwords.text, context);
+                          setState(() {
+                            _showCircle = !_showCircle;
+                          });
                         },
                         child: const Text('Giriş Yap'),
                       ),
@@ -263,21 +307,13 @@ class MyCustomFormState extends State<MyCustomForm> {
                           borderRadius: BorderRadius.circular(45),
                         ),
                         onPressed: () {
-                          // Validate returns true if the form is valid, or false otherwise.
-                          /* if (_formKey.currentState!.validate()) {
-                            // If the form is valid, display a snackbar. In the real world,
-                            // you'd often call a server or save the information in a database.
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Processing Data')),
-                            );
-                          }*/
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => GirisSayfasi()),
+                                builder: (context) => Anasayfa()),
                           );
                         },
-                        child: const Text('Hizmet Alan Girişi'),
+                        child: const Text('Hizmet Veren Girişi'),
                       ),
                     ),
                   ),
@@ -289,4 +325,19 @@ class MyCustomFormState extends State<MyCustomForm> {
       ),
     );
   }
+}
+
+FutureBuilder<User> buildFutureBuilder() {
+  return FutureBuilder<User>(
+    future: _futureUser,
+    builder: (context, snapshot) {
+      if (snapshot.hasData) {
+        return Text(snapshot.data!.username);
+      } else if (snapshot.hasError) {
+        return Text('${snapshot.error}');
+      }
+
+      return const CircularProgressIndicator();
+    },
+  );
 }
