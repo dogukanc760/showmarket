@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
+import 'package:showmarket/models/sector.dart';
+import 'package:showmarket/screens/aktif_hizmet_verenler.dart';
 import 'package:showmarket/screens/hizmetdetay.dart';
 import 'package:http/http.dart' as http;
 
@@ -38,6 +40,11 @@ class Question {
 }
 
 final List<Question> questions = [];
+final List<Sector> sectors = [];
+String sector = '';
+List<String> selectedQuestion = [];
+String city='';
+String distinct='';
 
 class HizmetKarsilama extends StatefulWidget {
   final String categoryId;
@@ -97,9 +104,11 @@ class OptionsChanges extends StatefulWidget {
 }
 
 class _OptionsChangesState extends State<OptionsChanges> {
+
   Future<void> getQuestion() async {
     questions.clear();
     print(widget.categoryIdd);
+    print(widget.categoryName);
     final response = await http.get(
       Uri.parse(
           'https://showmarket-api.herokuapp.com/api/question/get-by-category/' +
@@ -115,19 +124,55 @@ class _OptionsChangesState extends State<OptionsChanges> {
       var result = jsonDecode(response.body);
       print(result['data']);
       //  print(result['data'][0]['_id']);
+      if (result['data'].length > 0) {
+        setState(() {
+          for (var i = 0; i < result.length - 1; i++) {
+            questions.add(Question(
+                category: result['data'][i]['category'],
+                name: result['data'][i]['name'],
+                question: result['data'][i]['question'],
+                answer: result['data'][i]['answer'].cast<String>(),
+                serviceSector:
+                    result['data'][i]['serviceSector'].cast<String>(),
+                type: result['data'][i]['type'],
+                id: result['data'][i]['_id']));
+          }
+        });
+      }
+    } else {
+      throw Exception();
+    }
+  }
 
-      setState(() {
-        for (var i = 0; i < result.length; i++) {
-          questions.add(Question(
-              category: result['data'][i]['category'],
-              name: result['data'][i]['name'],
-              question: result['data'][i]['question'],
-              answer: result['data'][i]['answer'],
-              serviceSector: result['data'][i]['serviceSector'],
-              type: result['data'][i]['type'],
-              id: result['data'][i]['_id']));
-        }
-      });
+  Future<void> getSector() async {
+    questions.clear();
+    print(widget.categoryIdd);
+    print(widget.categoryName);
+    final response = await http.get(
+      Uri.parse(
+          'https://showmarket-api.herokuapp.com/api/sector/get-by-category/' +
+              widget.categoryName),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print(response.statusCode);
+
+      var result = jsonDecode(response.body);
+      print(result['data']);
+      //  print(result['data'][0]['_id']);
+      if (result['data'].length > 0) {
+        setState(() {
+          for (var i = 0; i < result.length - 1; i++) {
+            sectors.add(Sector(
+                category: result['data'][i]['category'].cast<String>(),
+                name: result['data'][i]['name'],
+                id: result['data'][i]['_id']));
+          }
+        });
+      }
     } else {
       throw Exception();
     }
@@ -137,6 +182,13 @@ class _OptionsChangesState extends State<OptionsChanges> {
   void initState() {
     super.initState();
     getQuestion();
+    getSector();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
   }
 
   @override
@@ -203,56 +255,130 @@ class _OptionsChangesState extends State<OptionsChanges> {
           ),
           SizedBox(
             width: MediaQuery.of(context).size.width / 1.3,
-            child: ListView.builder(
-              shrinkWrap: true,
-              scrollDirection: Axis.vertical,
-              itemCount:questions.length,
-              itemBuilder: (BuildContext context, int index) => Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: DropdownSearch<String>(
-                      validator: (v) => v == null ? "required field" : null,
-                      mode: Mode.MENU,
-                      dropdownSearchDecoration: InputDecoration(
-                        hoverColor: Colors.white,
-                        fillColor: Colors.white,
-                        hintText: "Seçilmesi Zorunlu Alan",
-                        hintStyle: TextStyle(fontSize: 12),
-                        labelText: "Hizmet sektörü seçin.",
-                        labelStyle: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold),
-                        filled: true,
-                        border: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.amber),
-                        ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: DropdownSearch<String>(
+                    validator: (v) => v == null ? "required field" : null,
+                    mode: Mode.MENU,
+                    dropdownSearchDecoration: InputDecoration(
+                      hoverColor: Colors.white,
+                      fillColor: Colors.white,
+                      hintText: "Seçilmesi Zorunlu Alan",
+                      hintStyle: TextStyle(fontSize: 12),
+                      labelText: "Hizmet verilecek sektörü seçin.",
+                      labelStyle:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      filled: true,
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF01689A)),
                       ),
-                      showAsSuffixIcons: true,
-                      clearButtonBuilder: (_) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: const Icon(
-                          Icons.clear,
-                          size: 24,
-                          color: Colors.black,
-                        ),
-                      ),
-                      dropdownButtonBuilder: (_) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: const Icon(
-                          Icons.keyboard_arrow_down,
-                          size: 34,
-                          color: Colors.black,
-                        ),
-                      ),
-                      showSelectedItems: true,
-                      items: ["Sirk", "Parti", "Kapalı Alan", 'Sinema'],
-                      showClearButton: true,
-                      onChanged: print,
-                      popupItemDisabled: (String? s) =>
-                          s?.startsWith('I') ?? true,
                     ),
+                    showAsSuffixIcons: true,
+                    clearButtonBuilder: (_) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: const Icon(
+                        Icons.clear,
+                        size: 24,
+                        color: Colors.black,
+                      ),
+                    ),
+                    dropdownButtonBuilder: (_) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 34,
+                        color: Colors.black,
+                      ),
+                    ),
+                    showSelectedItems: true,
+                    items: sectors[0].category,
+                    showClearButton: true,
+                    onChanged: (value) {
+                      setState(() {
+                        sector = value.toString();
+                        print(sector + "this");
+                      });
+                    },
+                    popupItemDisabled: (String? s) =>
+                        s?.startsWith('I') ?? true,
                   ),
-                  /* Expanded(
+                ),
+                /* Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          filled: true,
+                          labelText: "Menu mode *",
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF01689A)),
+                          ),
+                        ),
+                      ))*/
+              ],
+            ),
+          ),
+          SizedBox(
+            width: MediaQuery.of(context).size.width / 1.3,
+            child: questions.length > 0
+                ? ListView.builder(
+                    shrinkWrap: true,
+                    scrollDirection: Axis.vertical,
+                    itemCount: questions.length,
+                    itemBuilder: (BuildContext context, int index) => Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: DropdownSearch<String>(
+                            validator: (v) =>
+                                v == null ? "required field" : null,
+                            mode: Mode.MENU,
+                            dropdownSearchDecoration: InputDecoration(
+                              hoverColor: Colors.white,
+                              fillColor: Colors.white,
+                              hintText: "Seçilmesi Zorunlu Alan",
+                              hintStyle: TextStyle(fontSize: 12),
+                              labelText: questions[index].question,
+                              labelStyle: TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.bold),
+                              filled: true,
+                              border: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.amber),
+                              ),
+                            ),
+                            showAsSuffixIcons: true,
+                            clearButtonBuilder: (_) => Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: const Icon(
+                                Icons.clear,
+                                size: 24,
+                                color: Colors.black,
+                              ),
+                            ),
+                            dropdownButtonBuilder: (_) => Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: const Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 34,
+                                color: Colors.black,
+                              ),
+                            ),
+                            showSelectedItems: true,
+                            items: questions[index].answer,
+                            showClearButton: true,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedQuestion.add(value.toString());
+                                print(selectedQuestion.length);
+                                print(value.toString());
+                              });
+                            },
+                            popupItemDisabled: (String? s) =>
+                                s?.startsWith('I') ?? true,
+                          ),
+                        ),
+                        Divider(),
+                        /* Expanded(
                         child: TextField(
                           decoration: InputDecoration(
                             filled: true,
@@ -262,9 +388,10 @@ class _OptionsChangesState extends State<OptionsChanges> {
                             ),
                           ),
                         ))*/
-                ],
-              ),
-            ),
+                      ],
+                    ),
+                  )
+                : Text(''),
           ),
           Divider(),
           SizedBox(
@@ -307,14 +434,15 @@ class _OptionsChangesState extends State<OptionsChanges> {
                       ),
                     ),
                     showSelectedItems: true,
-                    items: [
-                      "Boya Badana",
-                      "Tadilat",
-                      "Sıva döşeme",
-                      'Duvar Örme'
-                    ],
+                    items: ["İzmir", "Ankara", "İstanbul", 'Antalya'],
                     showClearButton: true,
-                    onChanged: print,
+                    onChanged: (value) {
+                      setState(() {
+                        city = value.toString();
+                        selectedQuestion.add(value.toString());
+                        print(value.toString());
+                      });
+                    },
                     popupItemDisabled: (String? s) =>
                         s?.startsWith('I') ?? true,
                   ),
@@ -374,13 +502,16 @@ class _OptionsChangesState extends State<OptionsChanges> {
                     ),
                     showSelectedItems: true,
                     items: [
-                      "3D Sinema",
-                      "Kapalı Alan",
-                      "Açık Alan",
-                      'Yataklı Sinema'
+                      "Merkez",
                     ],
                     showClearButton: true,
-                    onChanged: print,
+                    onChanged: (value) {
+                      setState(() {
+                        distinct = value.toString();
+                        selectedQuestion.add(value.toString());
+                        print(value.toString());
+                      });
+                    },
                     popupItemDisabled: (String? s) =>
                         s?.startsWith('I') ?? true,
                   ),
@@ -425,7 +556,16 @@ class _OptionsChangesState extends State<OptionsChanges> {
                             }*/
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => HizmetDetay()),
+                    MaterialPageRoute(
+                        builder: (context) => AktifHizmetVerenler(
+                          city: city,
+                              distinct: distinct,
+                              sector: sector,
+                              questions: questions,
+                              sectors: sectors,
+                              selectedQuestion: selectedQuestion,
+                          category: widget.categoryName,
+                            )),
                   );
                 },
                 child: const Text('Devam Et'),

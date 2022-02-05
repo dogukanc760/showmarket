@@ -8,6 +8,40 @@ import 'package:http/http.dart' as http;
 
 import 'karsilama.dart';
 import 'kayit_ol.dart';
+ Future<void> loginUniversal(String mail, String password, BuildContext context) async {
+
+  final response = await http.post(
+    Uri.parse('https://showmarket-api.herokuapp.com/api/auth/login'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(
+        <String, String>{'gsm': mail, 'mail': mail, 'password': password}),
+  );
+
+  if (response.statusCode == 200) {
+    statusCode = 200;
+    print(response.statusCode);
+    final prefs = await SharedPreferences.getInstance();
+    var result = jsonDecode(response.body);
+    print(result['data']);
+    prefs.setString('username', result['data']['mail']);
+    prefs.setString('name', result['data']['name']);
+    prefs.setString('surname', result['data']['surname']);
+    prefs.setString('gsm', result['data']['gsm']);
+    prefs.setString('id', result['data']['_id']);
+    prefs.setString('adress', jsonEncode(result['data']['adress']));
+    prefs.setString('img', result['data']['img']);
+  
+    
+    print(prefs.getString('adress'));
+    foo(context);
+
+
+  } else {
+    throw Exception();
+  }
+}
 
 class GirisSayfasi extends StatelessWidget {
   const GirisSayfasi({Key? key}) : super(key: key);
@@ -17,7 +51,7 @@ class GirisSayfasi extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         backgroundColor: Color(0xFFEB3A18),
-        resizeToAvoidBottomInset: true,
+        resizeToAvoidBottomInset: false,
         body: const MyCustomForm(),
       ),
     );
@@ -38,6 +72,11 @@ Future<User>? _futureUser;
 String username = "";
 String password = "";
 bool _showCircle = true;
+int statusCode = 0;
+String usernameSession = "";
+String userId = "";
+String passwordSave = "";
+
 
 // Create a corresponding State class.
 // This class holds data related to the form.
@@ -50,9 +89,29 @@ class MyCustomFormState extends State<MyCustomForm> {
   final _formKey = GlobalKey<FormState>();
   final usernames = TextEditingController();
   final passwords = TextEditingController();
+void getSession() async {
+  final prefs = await SharedPreferences.getInstance();
+  userId = prefs.getString('sessionId').toString();
+  usernameSession = prefs.getString('usernameSession').toString();
+  passwordSave = prefs.getString('passwordSave').toString();
+  print(userId + "denme");
+}
 
+
+void addSession(String usernameSession, String passwordSession, String userIdSession) async{
+  final prefs = await SharedPreferences.getInstance();
+  prefs.setString('usernameSession', usernameSession);
+  prefs.setString('passwordSave', passwordSession);
+  prefs.setString('sessionId', userIdSession);
+}
   bool _passwordVisible = true;
+  bool rememberMe = false;
+  bool showCircle = false;
+  void _onRememberMeChanged(bool? newValue) => setState(() {
+    rememberMe = !rememberMe;
+    print(rememberMe);
 
+  });
   @override
   void dispose() {
     usernames.dispose();
@@ -61,17 +120,58 @@ class MyCustomFormState extends State<MyCustomForm> {
   }
 
   Widget build(BuildContext context) {
+    Future<User> login(String mail, String password, BuildContext context) async {
+
+  final response = await http.post(
+    Uri.parse('https://showmarket-api.herokuapp.com/api/auth/login'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(
+        <String, String>{'gsm': mail, 'mail': mail, 'password': password}),
+  );
+
+  if (response.statusCode == 200) {
+    statusCode = 200;
+    print(response.statusCode);
+    final prefs = await SharedPreferences.getInstance();
+    var result = jsonDecode(response.body);
+    print(result['data']);
+    prefs.setString('username', result['data']['mail']);
+    prefs.setString('name', result['data']['name']);
+    prefs.setString('surname', result['data']['surname']);
+    prefs.setString('gsm', result['data']['gsm']);
+    prefs.setString('id', result['data']['_id']);
+    prefs.setString('adress', jsonEncode(result['data']['adress']));
+    prefs.setString('img', result['data']['img']);
+    if(rememberMe){
+      print('beni hatırla');
+        addSession(usernames.text.toString(), passwords.text.toString(), result['data']['_id']);
+        print('hatırladım');
+    }
+    else{
+      print('beni hatırlama');
+    }
+    print(prefs.getString('adress'));
+    foo(context);
+
+    return User.fromJson(jsonDecode(response.body));
+  } else {
+    throw Exception();
+  }
+}
+
     // Full screen width and height
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
-
+    bool? checkedValue = false;
     var padding = MediaQuery.of(context).padding;
     double height1 = height - padding.top - padding.bottom;
 
 // Height (without status bar)
     double height2 = height - padding.top;
 
-// Height (without status and toolbar)
+// Height (without status and toolbar) 
     double height3 = height - padding.top - kToolbarHeight;
 
     // Build a Form widget using the _formKey created above.
@@ -232,9 +332,18 @@ class MyCustomFormState extends State<MyCustomForm> {
                   ],
                 ),
                 //Text Button gelecek kayıt ol ve şifremi unuttum
-
+                Center(
+                  child: Padding(padding: EdgeInsets.fromLTRB(80, 0, 0, 0),
+                    child: CheckboxListTile(
+                      title: Text("Beni Hatırla", style: TextStyle(color:Colors.white),),
+                      value: rememberMe,
+                      activeColor: Colors.black,
+                      onChanged: _onRememberMeChanged,
+                      controlAffinity: ListTileControlAffinity.leading,  //  <-- leading Checkbox
+                    ),),
+                ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 20),
+                  padding: const EdgeInsets.only(top: 0),
                   child: Center(
                     child: Container(
                       width: 310,
@@ -250,6 +359,8 @@ class MyCustomFormState extends State<MyCustomForm> {
                           borderRadius: BorderRadius.circular(45),
                         ),
                         onPressed: () {
+
+                              CircularProgressIndicator();
                           if (!username.isEmpty) {
                             final snackBar = SnackBar(
                               content: const Text(
@@ -281,6 +392,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                               password: passwords.text,
                               mail: usernames.text,
                               gsm: usernames.text);
+
                           var result =
                               login(usernames.text, passwords.text, context);
                           setState(() {
@@ -343,35 +455,6 @@ FutureBuilder<User> buildFutureBuilder() {
   );
 }
 
-Future<User> login(String mail, String password, BuildContext context) async {
-  final response = await http.post(
-    Uri.parse('https://showmarket-api.herokuapp.com/api/auth/login'),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(
-        <String, String>{'gsm': mail, 'mail': mail, 'password': password}),
-  );
-
-  if (response.statusCode == 200) {
-    print(response.statusCode);
-    final prefs = await SharedPreferences.getInstance();
-    var result = jsonDecode(response.body);
-    print(result['data']);
-    prefs.setString('username', result['data']['mail']);
-    prefs.setString('name', result['data']['name']);
-    prefs.setString('surname', result['data']['surname']);
-    prefs.setString('gsm', result['data']['gsm']);
-    prefs.setString('id', result['data']['_id']);
-    prefs.setString('adress', jsonEncode(result['data']['adress']));
-    print(prefs.getString('adress'));
-    foo(context);
-
-    return User.fromJson(jsonDecode(response.body));
-  } else {
-    throw Exception();
-  }
-}
 
 void foo(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();

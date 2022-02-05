@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
 import 'package:showmarket/main.dart';
+import 'package:showmarket/screens/Favoriler.dart';
 import 'package:showmarket/screens/guvenlik.dart';
 import 'package:showmarket/screens/profilim.dart';
 
@@ -138,6 +139,36 @@ class _HesabimState extends State<Hesabim> {
                           },
                           child: Text(
                             'Profilim',
+                            style: TextStyle(color: Colors.black, fontSize: 18),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Padding(
+                          padding: const EdgeInsets.fromLTRB(40, 0, 0, 0),
+                          child: SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: Image(
+                                  image: AssetImage('assets/likes.png')))),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => Favoriler()),
+                            );
+                          },
+                          child: Text(
+                            'Favorilerim',
                             style: TextStyle(color: Colors.black, fontSize: 18),
                           ),
                         ),

@@ -9,10 +9,11 @@ import 'package:showmarket/screens/HizmetVereninProfiliBuradaKullan%C4%B1lcakOla
 import 'package:showmarket/screens/talep_durumu.dart';
 import 'package:http/http.dart' as http;
 
-final List<Demand> finished=[];
+final List<Demand> finished = [];
 final List<Demand> moving = [];
 String userId = "";
 int totalCount = 0;
+
 class Taleplerim extends StatelessWidget {
   const Taleplerim({Key? key}) : super(key: key);
 
@@ -63,8 +64,9 @@ class Taleplerim extends StatelessWidget {
 void getSession() async {
   final prefs = await SharedPreferences.getInstance();
   userId = prefs.getString('id').toString();
-  print(userId +"denme");
+  print(userId + "denme");
 }
+
 class TalepDurumlarim extends StatefulWidget {
   const TalepDurumlarim({Key? key}) : super(key: key);
 
@@ -73,60 +75,68 @@ class TalepDurumlarim extends StatefulWidget {
 }
 
 class _TalepDurumlarimState extends State<TalepDurumlarim> {
-
   Future<void> getDemands() async {
     final prefs = await SharedPreferences.getInstance();
     userId = prefs.getString('id').toString();
-    print(userId +"denme");
+    print(userId + "denme");
     print(userId);
-    finished.clear();
     moving.clear();
-    print('https://showmarket-api.herokuapp.com/api/demand/get-by-user/'+userId);
+    finished.clear();
+    print('https://showmarket-api.herokuapp.com/api/demand/get-by-user/' +
+        userId);
     final response = await http.get(
-      Uri.parse('https://showmarket-api.herokuapp.com/api/demand/get-by-user/'+userId),
+      Uri.parse('https://showmarket-api.herokuapp.com/api/demand/get-by-user/' +
+          userId),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-
     );
 
     if (response.statusCode == 200) {
-      print(response.statusCode);
-      print(userId);
+
       var result = jsonDecode(response.body);
-      print(result['data']);
+
       //  print(result['data'][0]['_id']);
 
-      for(var i = 0; i<=result['data'].length; i++){
-
+      for (var i = 0; i < result['data'].length; i++) {
         setState(() {
-          if(result['data'][i]['status'] == 'finished' || result['data'][i]['status'] == 'canceled' ){
+          if (result['data'][i]['status'] == 'finished' ||
+              result['data'][i]['status'] == 'canceled') {
             finished.add(Demand(
-                id: result['data'][i]['_id'],company: result['data'][i]['company'],
-                user: result['data'][i]['user'], service: result['data'][i]['service'], location: result['data'][i]['location'],
-                time: result['data'][i]['time'], date: result['data'][i]['date'], question: result['data'][i]['question'],
-                answer: result['data'][i]['answer'],
-                status: result['data'][i]['status'], isActive: result['data'][i]['isActive'], price: result['data'][i]['price'],
-                offerDescription: result['data'][i]['offerDescription'], offerPrice: result['data'][i]['offerPrice']));
-          }
-          else{
-
-
-            moving.add(Demand(company: result['data'][i]['company'],
-                id: result['data'][i]['_id'], user: result['data'][i]['user'], service: result['data'][i]['service'],
+                id: result['data'][i]['_id'],
+                company: result['data'][i]['company'],
+                user: result['data'][i]['user'],
+                service: result['data'][i]['service'],
                 location: result['data'][i]['location'],
-                time: result['data'][i]['time'], date: result['data'][i]['date'], question: result['data'][i]['question'],
+                time: result['data'][i]['time'],
+                date: result['data'][i]['date'],
+                question: result['data'][i]['question'],
                 answer: result['data'][i]['answer'],
-                status: result['data'][i]['status'], isActive: result['data'][i]['isActive'], price: result['data'][i]['price'],
-                offerDescription: result['data'][i]['offerDescription'], offerPrice: result['data'][i]['offerPrice']));
+                status: result['data'][i]['status'],
+                isActive: result['data'][i]['isActive'],
+                price: result['data'][i]['price'],
+                offerDescription: result['data'][i]['offerDescription'],
+                offerPrice: result['data'][i]['offerPrice']));
+          } else if (result['data'][i]['status'] == 'moving') {
+            moving.add(Demand(
+                company: result['data'][i]['company'],
+                id: result['data'][i]['_id'],
+                user: result['data'][i]['user'],
+                service: result['data'][i]['service'],
+                location: result['data'][i]['location'],
+                time: result['data'][i]['time'],
+                date: result['data'][i]['date'],
+                question: result['data'][i]['question'],
+                answer: result['data'][i]['answer'],
+                status: result['data'][i]['status'],
+                isActive: result['data'][i]['isActive'],
+                price: result['data'][i]['price'],
+                offerDescription: result['data'][i]['offerDescription'],
+                offerPrice: result['data'][i]['offerPrice']));
 
           }
-
         });
-
-
       }
-
     } else {
       throw Exception().toString();
     }
@@ -135,7 +145,14 @@ class _TalepDurumlarimState extends State<TalepDurumlarim> {
   @override
   void initState() {
     super.initState();
+    print("burasi init");
+    //WidgetsBinding.instance.addPostFrameCallback((_) {getDemands();});
     getDemands();
+  }
+
+  @override
+  void dispose(){
+    super.dispose();
   }
 
   @override
@@ -152,147 +169,121 @@ class _TalepDurumlarimState extends State<TalepDurumlarim> {
             child: ListView.builder(
               shrinkWrap: true,
               scrollDirection: Axis.vertical,
-              itemCount: finished.length,
-              itemBuilder: (BuildContext context, int index) => Padding(
-                padding: const EdgeInsets.fromLTRB(10, 20, 0, 0),
-                child: Row(
-                  children: [
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(90.0),
-                        side: BorderSide(width: 1, color: Colors.grey),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                        child: SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: Image(
-                            image: AssetImage('assets/kategori_1.png'),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(0, 5, 30, 0),
-                                child: TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => hvProfil(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    moving[index].service[0][2].toString(),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18),
-                                  ),
+              itemCount: moving.length,
+              itemBuilder: (BuildContext context, int index) => moving.length >
+                      0
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 20, 0, 0),
+                      child: Row(
+                        children: [
+                          Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(90.0),
+                              side: BorderSide(width: 1, color: Colors.grey),
+                            ),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                              child: SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: Image(
+                                  image: AssetImage('assets/kategori_1.png'),
                                 ),
                               ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(10, 0, 0, 0),
-                                    child: Text(
-                                      moving[index].service[0][0].toString(),
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          0, 5, 30, 0),
+                                      child: TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => hvProfil(),
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          moving[index]
+                                              .service[0][2]
+                                              .toString(),
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 60.0, bottom: 10),
-                                    child: SizedBox(
-                                      width: 150,
-                                      height: 35,
-                                      child: moving[index].status == 'offer'
-                                          ? TextButton(
+                                    Row(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              10, 0, 0, 0),
+                                          child: Text(
+                                            moving[index]
+                                                .service[0][0]
+                                                .toString(),
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              left: 60.0, bottom: 10),
+                                          child: SizedBox(
+                                            width: 150,
+                                            height: 35,
+                                            child: TextButton(
                                               onPressed: () {
+
                                                 Navigator.push(
                                                   context,
                                                   MaterialPageRoute(
                                                     builder: (context) =>
-                                                        TalepDurumu(state: 1, id:moving[index].id.toString()),
+                                                        TalepDurumu(
+                                                            state: 4,
+                                                            id: moving[index]
+                                                                .id
+                                                                .toString()),
                                                   ),
                                                 );
                                               },
-                                              child: Container(
-                                                child: Text(
-                                                  moving[index].offerPrice,
-                                                  style: TextStyle(
-                                                    fontSize: 15,
-                                                    color: Color(0xFFEB3A18),
-                                                  ),
+                                              child:moving[index].offerPrice.isEmpty?
+                                                  Text('Teklif Bekleniyor'):
+                                              Text(
+                                                'Teklif Bekliyor',
+                                                style: TextStyle(
+                                                  fontSize: 15,
+                                                  color: Color(0xFFEB3A18),
                                                 ),
                                               ),
-                                            )
-                                          : finished[index].status == 'moving'
-                                              ? TextButton(
-                                                  onPressed: () {
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            TalepDurumu(
-                                                                state: 4, id:moving[index].id.toString()),
-                                                      ),
-                                                    );
-                                                  },
-                                                  child: Text(
-                                                    'Teklif Bekliyor',
-                                                    style: TextStyle(
-                                                      fontSize: 15,
-                                                      color: Color(0xFFEB3A18),
-                                                    ),
-                                                  ),
-                                                )
-                                              : TextButton(
-                                                  onPressed: () {
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            TalepDurumu(
-                                                                state: 4, id:moving[index].id.toString()),
-                                                      ),
-                                                    );
-                                                  },
-                                                  child: Text(
-                                                    'Teklif Bekliyror',
-                                                    style: TextStyle(
-                                                      fontSize: 15,
-                                                      color: Color(0xFFEB3A18),
-                                                    ),
-                                                  ),
-                                                ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+                        ],
+                      ),
+                    )
+                  : Text(''),
             ),
           ),
         ],
@@ -319,151 +310,175 @@ class _TalepBitenlerimState extends State<TalepBitenlerim> {
             height: MediaQuery.of(context).size.height -
                 MediaQuery.of(context).padding.bottom -
                 170,
-            child: ListView.builder(
-              shrinkWrap: true,
-              scrollDirection: Axis.vertical,
-              itemCount: finished.length,
-              itemBuilder: (BuildContext context, int index) => Padding(
-                padding: const EdgeInsets.fromLTRB(10, 20, 0, 0),
-                child: Row(
-                  children: [
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(90.0),
-                        side: BorderSide(width: 1, color: Colors.grey),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                        child: SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: Image(
-                            image: AssetImage('assets/kategori_1.png'),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(0, 5, 30, 0),
-                                child: TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => hvProfil(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    finished[index].service[0][2].toString(),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18),
-                                  ),
+            child: finished.length > 1
+                ? ListView.builder(
+                    shrinkWrap: true,
+                    scrollDirection: Axis.vertical,
+                    itemCount: finished.length,
+                    itemBuilder: (BuildContext context, int index) => Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 20, 0, 0),
+                      child: Row(
+                        children: [
+                          Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(90.0),
+                              side: BorderSide(width: 1, color: Colors.grey),
+                            ),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                              child: SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: Image(
+                                  image: AssetImage('assets/kategori_1.png'),
                                 ),
                               ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding:
-                                    const EdgeInsets.fromLTRB(10, 0, 0, 0),
-                                    child: Text(
-                                      finished[index].service[0][0].toString(),
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 60.0, bottom: 10),
-                                    child: SizedBox(
-                                      width: 150,
-                                      height: 35,
-                                      child: finished[index].status == 'finished'
-                                          ? TextButton(
+                            ),
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          0, 5, 30, 0),
+                                      child: TextButton(
                                         onPressed: () {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) =>
-                                                  TalepDurumu(state: 2, id:finished[index].id),
-                                            ),
-                                          );
-                                        },
-                                        child: Container(
-                                          child: Text(
-                                            "Tamamlandı",
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                              color: Color(0xFFEB3A18),
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                          : finished[index].status == 'cancelled'
-                                          ? TextButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  TalepDurumu(
-                                                      state: 13, id:finished[index].id),
+                                              builder: (context) => hvProfil(),
                                             ),
                                           );
                                         },
                                         child: Text(
-                                          'İptal Edildi',
+                                          finished[index]
+                                              .service[0][2]
+                                              .toString(),
+                                          textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontSize: 15,
-                                            color: Color(0xFFEB3A18),
-                                          ),
-                                        ),
-                                      )
-                                          : TextButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  TalepDurumu(
-                                                      state: 2, id:finished[index].id),
-                                            ),
-                                          );
-                                        },
-                                        child: Text(
-                                          'İptal Edildi',
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            color: Color(0xFFEB3A18),
-                                          ),
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                    Row(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              10, 0, 0, 0),
+                                          child: Text(
+                                            finished[index]
+                                                .service[0][0]
+                                                .toString(),
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              left: 60.0, bottom: 10),
+                                          child: SizedBox(
+                                            width: 150,
+                                            height: 35,
+                                            child:
+                                                finished[index].status ==
+                                                        'finished'
+                                                    ? TextButton(
+                                                        onPressed: () {
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  TalepDurumu(
+                                                                      state: 2,
+                                                                      id: finished[
+                                                                              index]
+                                                                          .id),
+                                                            ),
+                                                          );
+                                                        },
+                                                        child: Container(
+                                                          child: Text(
+                                                            "Tamamlandı",
+                                                            style: TextStyle(
+                                                              fontSize: 15,
+                                                              color: Color(
+                                                                  0xFFEB3A18),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      )
+                                                    : finished[index].status ==
+                                                            'cancelled'
+                                                        ? TextButton(
+                                                            onPressed: () {
+                                                              Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                  builder: (context) =>
+                                                                      TalepDurumu(
+                                                                          state:
+                                                                              13,
+                                                                          id: finished[index]
+                                                                              .id),
+                                                                ),
+                                                              );
+                                                            },
+                                                            child: Text(
+                                                              'İptal Edildi',
+                                                              style: TextStyle(
+                                                                fontSize: 15,
+                                                                color: Color(
+                                                                    0xFFEB3A18),
+                                                              ),
+                                                            ),
+                                                          )
+                                                        : TextButton(
+                                                            onPressed: () {
+                                                              Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                  builder: (context) =>
+                                                                      TalepDurumu(
+                                                                          state:
+                                                                              2,
+                                                                          id: finished[index]
+                                                                              .id),
+                                                                ),
+                                                              );
+                                                            },
+                                                            child: Text(
+                                                              'İptal Edildi',
+                                                              style: TextStyle(
+                                                                fontSize: 15,
+                                                                color: Color(
+                                                                    0xFFEB3A18),
+                                                              ),
+                                                            ),
+                                                          ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  )
+                : Text(''),
           ),
         ],
       ),

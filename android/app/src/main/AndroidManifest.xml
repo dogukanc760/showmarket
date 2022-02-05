@@ -1,8 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.showmarket">
-   <application
-        android:label="showmarket"
+    package="showmarket.com.showmarket">
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application
+        android:label="ShowMarket"
         android:icon="@mipmap/ic_launcher">
+
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

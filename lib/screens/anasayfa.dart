@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_controller.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -36,8 +37,14 @@ final List<String> fastService = [
   'Etkinlik-1',
   'Etkinlik-1'
 ];
-
-
+String username='';
+String name = '';
+String surname = '';
+String adress='';
+String img = '';
+String gsm = '';
+String userId='';
+String responses = '';
 class Anasayfa extends StatefulWidget {
   const Anasayfa({Key? key}) : super(key: key);
 
@@ -46,7 +53,6 @@ class Anasayfa extends StatefulWidget {
 }
 
 class _AnasayfaState extends State<Anasayfa> {
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -64,7 +70,6 @@ class _AnasayfaState extends State<Anasayfa> {
           ),
         ),
         bottomNavigationBar: NavigationBottom(),
-
       ),
     );
   }
@@ -78,17 +83,14 @@ class HomePages extends StatefulWidget {
 }
 
 class _HomePagesState extends State<HomePages> {
-
-
-
   //get slider
-  Future<Widget> login(String mail, String password, BuildContext context) async {
+  Future<Widget> login(
+      String mail, String password, BuildContext context) async {
     final response = await http.get(
       Uri.parse('https://showmarket-api.herokuapp.com/api/slider'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-
     );
 
     if (response.statusCode == 200) {
@@ -96,15 +98,15 @@ class _HomePagesState extends State<HomePages> {
 
       var result = jsonDecode(response.body);
       //  print(result['data'][0]['_id']);
-      for(var i = 0; i<result.length; i++){
+      for (var i = 0; i < result.length; i++) {
         setState(() {
           print(result['data'][i]['sliderUrl']);
-          imgList.add("https://showmarket-api.herokuapp.com/images/"+result['data'][i]['sliderUrl']);
+          imgList.add("https://showmarket-api.herokuapp.com/images/" +
+              result['data'][i]['sliderUrl']);
         });
 
         print(imgList);
       }
-
     } else {
       throw Exception();
     }
@@ -119,7 +121,6 @@ class _HomePagesState extends State<HomePages> {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-
     );
 
     if (response.statusCode == 200) {
@@ -127,38 +128,55 @@ class _HomePagesState extends State<HomePages> {
 
       var result = jsonDecode(response.body);
       //  print(result['data'][0]['_id']);
-      for(var i = 0; i<result.length; i++){
+      for (var i = 0; i < result.length; i++) {
         print(result['data'][i]);
         setState(() {
-          category.add(Category(name: result['data'][i]['name'], img: result['data'][i]['img'],
-              isActive: result['data'][i]['isActive'], showHome: result['data'][i]['showHome'], id: result['data'][i]['_id']));
-
+          category.add(Category(
+              name: result['data'][i]['name'],
+              img: result['data'][i]['img'],
+              isActive: result['data'][i]['isActive'],
+              showHome: result['data'][i]['showHome'],
+              id: result['data'][i]['_id']));
         });
 
         print(category[i]);
       }
       return ListView(
-
-        children: [
-
-        ],
+        children: [],
       );
     } else {
       throw Exception();
     }
   }
+  void getSession() async {
+
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+     
+      img = prefs.getString('img').toString();
+      username = prefs.getString('username').toString();
+      name = prefs.getString('name').toString();
+      surname = prefs.getString('surname').toString();
+      gsm = prefs.getString('gsm').toString();
+      userId = prefs.getString('id').toString();
+       adress = prefs.getString('adress').toString();
+      adress=jsonDecode(adress)[0];
+    });
+
+    print(userId+username+name);
+
+  }
   @override
-  void initState(){
+  void initState() {
     super.initState();
+    getSession();
     getCategory();
     login('mail', 'password', context);
   }
+
   @override
-
   Widget build(BuildContext context) {
-
     return Container(
-
         child: Column(
       children: [
         Padding(
@@ -188,44 +206,45 @@ class _HomePagesState extends State<HomePages> {
                     borderRadius: BorderRadius.all(Radius.circular(32.0)),
                   ),
                 ),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    fillColor: Colors.white70,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
-                      borderSide:
-                          BorderSide(color: Colors.grey.shade300, width: 0.0),
+                child: Container(
+                  width:MediaQuery.of(context).size.width,
+                  height:80,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(40.0),
+                          topRight: Radius.circular(40.0)),
+                      color: Color(0xFFEB3A18),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
-                      borderSide:
-                          BorderSide(color: Colors.greenAccent, width: 0.0),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
-                      borderSide: BorderSide(color: Colors.white, width: 0.0),
-                    ),
-                    contentPadding: new EdgeInsets.symmetric(vertical: 0),
-                    hintText: 'Aradığınız hizmeti belirtiniz.',
-                    hintStyle:
-                        TextStyle(color: Colors.grey.shade500, fontSize: 14),
-                    filled: true,
-                    prefixIcon: IconButton(
-                      padding: const EdgeInsetsDirectional.only(start: 12.0),
-                      alignment: Alignment.centerLeft,
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.search,
-                      ),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Boş Bir Sorgu Aranamaz!';
-                    }
-                    return null;
-                  },
-                ),
+                   child:Row(
+                     mainAxisAlignment: MainAxisAlignment.center,
+                     children: [
+                       Card(
+                         shape: RoundedRectangleBorder(
+                             borderRadius:
+                             BorderRadius.circular(
+                                 90.0),
+                             side: BorderSide(
+                                 width: 1,
+                                 color: Colors.grey)),
+                         child: Padding(
+                           padding:
+                           const EdgeInsets.all(8.0),
+                           child:Image.network('https://st.depositphotos.com/2101611/3925/v/600/depositphotos_39258143-stock-illustration-businessman-avatar-profile-picture.jpg'
+                           , width: 40,height:40, fit: BoxFit.fill,)
+                         ),
+                       ),
+                       Padding(
+                         padding: const EdgeInsets.fromLTRB(0, 30, 0, 0),
+                         child: Column(
+                           children: [
+                             Text(name, style: TextStyle(color:Colors.white, fontSize: 16, fontWeight: FontWeight.bold),),
+                             Text(adress, style: TextStyle(color:Colors.white, fontSize: 14, fontWeight: FontWeight.bold),),
+                           ],
+                         ),
+                       )
+                     ],
+                   )
+                )
               ),
             )
           ]),
@@ -281,7 +300,7 @@ class _HomePagesState extends State<HomePages> {
                                   padding: EdgeInsets.fromLTRB(0, 1, 0, 0),
                                 ),
                               ),
-                              TextSpan(text: 'Gösteri Dünyası Özgür Erişim ')
+                              TextSpan(text: 'Gösteri Dünyasına Özgür Erişim ')
                             ],
                           ),
                         ),
@@ -354,14 +373,15 @@ class _HomePagesState extends State<HomePages> {
                       ListView.builder(
                         shrinkWrap: true,
                         itemCount: category.length,
-                        itemBuilder: (BuildContext context, int index){
+                        itemBuilder: (BuildContext context, int index) {
                           return Container(
                             child: Column(
                               children: [
                                 Flexible(
                                   child: InkWell(
                                     child: Padding(
-                                      padding: const EdgeInsets.only(top: 5, left: 10),
+                                      padding: const EdgeInsets.only(
+                                          top: 5, left: 10),
                                       child: Container(
                                         height: 53,
                                         width: 53,
@@ -369,11 +389,14 @@ class _HomePagesState extends State<HomePages> {
                                           borderRadius: BorderRadius.only(
                                               bottomLeft: Radius.circular(30.0),
                                               topRight: Radius.circular(30.0),
-                                              bottomRight: Radius.circular(40.0),
+                                              bottomRight:
+                                                  Radius.circular(40.0),
                                               topLeft: Radius.circular(40.0)),
                                           color: Color(0xffe3edf6),
                                           image: DecorationImage(
-                                            image: NetworkImage('https://showmarket-api.herokuapp.com/images/'+category[index].img),
+                                            image: NetworkImage(
+                                                'https://showmarket-api.herokuapp.com/images/' +
+                                                    category[index].img),
                                           ),
                                         ),
                                       ),
@@ -384,7 +407,8 @@ class _HomePagesState extends State<HomePages> {
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 2, left: 12),
+                                  padding:
+                                      const EdgeInsets.only(top: 2, left: 12),
                                   child: Text(category[index].name,
                                       style: TextStyle(
                                           fontSize: 11, color: Colors.white)),
@@ -393,13 +417,10 @@ class _HomePagesState extends State<HomePages> {
                             ),
                           );
                         },
-
                         scrollDirection: Axis.horizontal,
                         physics: NeverScrollableScrollPhysics(),
                         padding: EdgeInsets.all(0),
-
                       ),
-
                     ],
                   ),
                 ),
@@ -450,7 +471,8 @@ class _HomePagesState extends State<HomePages> {
                                       child: Padding(
                                         padding: const EdgeInsets.all(4),
                                         child: Image.network(
-                                          'https://showmarket-api.herokuapp.com/images/'+category[index].img,
+                                          'https://showmarket-api.herokuapp.com/images/' +
+                                              category[index].img,
                                           height: 50,
                                           width: 50,
                                           fit: BoxFit.fill,
@@ -558,7 +580,8 @@ class _HomePagesState extends State<HomePages> {
                                       child: Padding(
                                         padding: const EdgeInsets.all(4),
                                         child: Image.network(
-                                          'https://showmarket-api.herokuapp.com/images/'+category[index].img,
+                                          'https://showmarket-api.herokuapp.com/images/' +
+                                              category[index].img,
                                           height: 50,
                                           width: 50,
                                           fit: BoxFit.fill,
@@ -590,9 +613,6 @@ class _HomePagesState extends State<HomePages> {
       ],
     ));
   }
-
-
-
 }
 
 class ImageSliderDemo extends StatelessWidget {
@@ -677,9 +697,14 @@ class ImageSliderDemo_2 extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: Center(child: Image.network(item, fit: BoxFit.fitWidth, width: 230, height: 170,)),
+                        child: Center(
+                            child: Image.network(
+                          item,
+                          fit: BoxFit.fitWidth,
+                          width: 230,
+                          height: 170,
+                        )),
                       ),
-
                     ],
                   ),
                 ),
@@ -779,4 +804,3 @@ final List<Widget> imageSliders = imgList
       ),
     )
     .toList();
-

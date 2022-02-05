@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showmarket/models/user_model.dart';
 import 'package:showmarket/screens/anasayfa.dart';
 import 'package:showmarket/screens/girissayfasi.dart';
@@ -16,7 +19,7 @@ class GirisHizmet extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         backgroundColor: Color(0xFFEB3A18),
-        resizeToAvoidBottomInset: true,
+        resizeToAvoidBottomInset: false,
         body: const MyCustomForm(),
       ),
     );
@@ -58,7 +61,12 @@ class MyCustomFormState extends State<MyCustomForm> {
     passwords.dispose();
     super.dispose();
   }
+  bool? rememberMe = false;
+  void _onRememberMeChanged(bool? newValue) => setState(() {
+    rememberMe = !rememberMe!;
+    print(rememberMe);
 
+  });
   Widget build(BuildContext context) {
     // Full screen width and height
     double width = MediaQuery.of(context).size.width;
@@ -72,6 +80,39 @@ class MyCustomFormState extends State<MyCustomForm> {
 
 // Height (without status and toolbar)
     double height3 = height - padding.top - kToolbarHeight;
+Future<User> login(String mail, String password, BuildContext context) async {
+
+  final response = await http.post(
+    Uri.parse('https://showmarket-api.herokuapp.com/api/auth/login'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(
+        <String, String>{'gsm': mail, 'mail': mail, 'password': password}),
+  );
+
+  if (response.statusCode == 200) {
+    statusCode = 200;
+    print(response.statusCode);
+    final prefs = await SharedPreferences.getInstance();
+    var result = jsonDecode(response.body);
+    print(result['data']);
+    prefs.setString('username', result['data']['mail']);
+    prefs.setString('name', result['data']['name']);
+    prefs.setString('surname', result['data']['surname']);
+    prefs.setString('gsm', result['data']['gsm']);
+    prefs.setString('id', result['data']['_id']);
+    prefs.setString('adress', jsonEncode(result['data']['adress']));
+    prefs.setString('img', result['data']['img']);
+   
+    print(prefs.getString('adress'));
+    foo(context);
+
+    return User.fromJson(jsonDecode(response.body));
+  } else {
+    throw Exception();
+  }
+}
 
     // Build a Form widget using the _formKey created above.
     return SafeArea(
@@ -231,9 +272,18 @@ class MyCustomFormState extends State<MyCustomForm> {
                   ],
                 ),
                 //Text Button gelecek kayıt ol ve şifremi unuttum
-
+                Center(
+                  child: Padding(padding: EdgeInsets.fromLTRB(80, 0, 0, 0),
+                    child: CheckboxListTile(
+                      title: Text("Beni Hatırla", style: TextStyle(color:Colors.white),),
+                      value: rememberMe,
+                      activeColor: Colors.black,
+                      onChanged: _onRememberMeChanged,
+                      controlAffinity: ListTileControlAffinity.leading,  //  <-- leading Checkbox
+                    ),),
+                ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 20),
+                  padding: const EdgeInsets.only(top: 0),
                   child: Center(
                     child: Container(
                       width: 310,
@@ -310,10 +360,10 @@ class MyCustomFormState extends State<MyCustomForm> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => Anasayfa()),
+                                builder: (context) => GirisSayfasi()),
                           );
                         },
-                        child: const Text('Hizmet Veren Girişi'),
+                        child: const Text('Hizmet Alan Girişi'),
                       ),
                     ),
                   ),

@@ -104,10 +104,10 @@ class UstaBulamadik extends StatelessWidget {
               child: FlatButton(
                 color: Colors.deepPurple,
                 onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => AktifHizmetVerenler()));
+               //   Navigator.push(
+                 //     context,
+                   //   MaterialPageRoute(
+                     //     builder: (context) => AktifHizmetVerenler()));
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

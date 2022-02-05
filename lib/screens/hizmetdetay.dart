@@ -1,11 +1,15 @@
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
+import 'package:showmarket/models/sector.dart';
 
 import 'aktif_hizmet_verenler.dart';
+import 'hizmetkarsilama.dart';
 
 class HizmetDetay extends StatefulWidget {
-  const HizmetDetay({Key? key}) : super(key: key);
+  final List<Question> questions = [];
+  final List<Sector> sectors = [];
+   HizmetDetay({required questions, required sectors}) : super();
 
   @override
   _HizmetDetayState createState() => _HizmetDetayState();
@@ -24,7 +28,7 @@ class _HizmetDetayState extends State<HizmetDetay> {
           right: true,
           child: SingleChildScrollView(
               child: Stack(
-            children: [OptionDetails()],
+            children: [OptionDetails(questions: widget.questions,)],
           )),
         ),
         bottomNavigationBar: NavigationBottom(),
@@ -34,7 +38,8 @@ class _HizmetDetayState extends State<HizmetDetay> {
 }
 
 class OptionDetails extends StatefulWidget {
-  const OptionDetails({Key? key}) : super(key: key);
+  final List<Question> questions = [];
+   OptionDetails({required questions}) : super();
 
   @override
   _OptionDetailsState createState() => _OptionDetailsState();
@@ -357,11 +362,7 @@ class _OptionDetailsState extends State<OptionDetails> {
                 borderRadius: BorderRadius.circular(15),
               ),
               onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => AktifHizmetVerenler()),
-                );
+
               },
               child: const Text(
                 'Devam Et',
