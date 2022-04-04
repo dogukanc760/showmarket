@@ -107,7 +107,7 @@ class _NavigationBottomState extends State<NavigationBottom> {
       decoration: BoxDecoration(
         color: Colors.transparent,
         image: DecorationImage(
-          opacity: 0.9,
+          //opacity: 0.9,
           image: AssetImage('assets/altbar.png'),
           fit: BoxFit.fill,
         ),
