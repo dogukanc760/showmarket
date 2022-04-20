@@ -23,6 +23,7 @@ final List<String> categoryList = [
   'Etkinlik',
   'Etkinlik'
 ];
+final List<String> lambda = [];
 
 final List<String> fastService = [
   'Geziler',
@@ -37,14 +38,15 @@ final List<String> fastService = [
   'Etkinlik-1',
   'Etkinlik-1'
 ];
-String username='';
+String username = '';
 String name = '';
 String surname = '';
-String adress='';
+String adress = '';
 String img = '';
 String gsm = '';
-String userId='';
+String userId = '';
 String responses = '';
+
 class Anasayfa extends StatefulWidget {
   const Anasayfa({Key? key}) : super(key: key);
 
@@ -83,6 +85,9 @@ class HomePages extends StatefulWidget {
 }
 
 class _HomePagesState extends State<HomePages> {
+  var isLoading = false;
+  int categoryCount = 0;
+  int serviceCount = 0;
   //get slider
   Future<Widget> login(
       String mail, String password, BuildContext context) async {
@@ -98,7 +103,7 @@ class _HomePagesState extends State<HomePages> {
 
       var result = jsonDecode(response.body);
       //  print(result['data'][0]['_id']);
-      for (var i = 0; i < result.length; i++) {
+      for (var i = 0; i < result['data'].length; i++) {
         setState(() {
           print(result['data'][i]['sliderUrl']);
           imgList.add("https://showmarket-api.herokuapp.com/images/" +
@@ -115,6 +120,7 @@ class _HomePagesState extends State<HomePages> {
 
 //get category
   Future<ListView> getCategory() async {
+
     category.clear();
     final response = await http.get(
       Uri.parse('https://showmarket-api.herokuapp.com/api/category'),
@@ -128,7 +134,7 @@ class _HomePagesState extends State<HomePages> {
 
       var result = jsonDecode(response.body);
       //  print(result['data'][0]['_id']);
-      for (var i = 0; i < result.length; i++) {
+      for (var i = 0; i < result['data'].length; i++) {
         print(result['data'][i]);
         setState(() {
           category.add(Category(
@@ -139,33 +145,34 @@ class _HomePagesState extends State<HomePages> {
               id: result['data'][i]['_id']));
         });
 
-        print(category[i]);
       }
       return ListView(
         children: [],
       );
     } else {
+
       throw Exception();
     }
   }
+
   void getSession() async {
 
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-     
       img = prefs.getString('img').toString();
       username = prefs.getString('username').toString();
       name = prefs.getString('name').toString();
       surname = prefs.getString('surname').toString();
       gsm = prefs.getString('gsm').toString();
       userId = prefs.getString('id').toString();
-       adress = prefs.getString('adress').toString();
-      adress=jsonDecode(adress)[0];
+      adress = prefs.getString('adress').toString();
+      adress = jsonDecode(adress)[0];
     });
 
-    print(userId+username+name);
+    print(userId + username + name);
 
   }
+
   @override
   void initState() {
     super.initState();
@@ -182,72 +189,83 @@ class _HomePagesState extends State<HomePages> {
         Padding(
           padding: const EdgeInsets.fromLTRB(30, 20, 30, 30),
           child: Column(children: [
-            Container(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.4),
-                    spreadRadius: 2,
-                    blurRadius: 10,
-                    offset: Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Container(
-                decoration: ShapeDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.grey, Colors.white70],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: [0.1, 0.6],
-                    tileMode: TileMode.clamp,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                ),
-                child: Container(
-                  width:MediaQuery.of(context).size.width,
-                  height:80,
+                  Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(40.0),
-                          topRight: Radius.circular(40.0)),
-                      color: Color(0xFFEB3A18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.4),
+                          spreadRadius: 2,
+                          blurRadius: 10,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
                     ),
-                   child:Row(
-                     mainAxisAlignment: MainAxisAlignment.center,
-                     children: [
-                       Card(
-                         shape: RoundedRectangleBorder(
-                             borderRadius:
-                             BorderRadius.circular(
-                                 90.0),
-                             side: BorderSide(
-                                 width: 1,
-                                 color: Colors.grey)),
-                         child: Padding(
-                           padding:
-                           const EdgeInsets.all(8.0),
-                           child:Image.network('https://st.depositphotos.com/2101611/3925/v/600/depositphotos_39258143-stock-illustration-businessman-avatar-profile-picture.jpg'
-                           , width: 40,height:40, fit: BoxFit.fill,)
-                         ),
-                       ),
-                       Padding(
-                         padding: const EdgeInsets.fromLTRB(0, 30, 0, 0),
-                         child: Column(
-                           children: [
-                             Text(name, style: TextStyle(color:Colors.white, fontSize: 16, fontWeight: FontWeight.bold),),
-                             Text(adress, style: TextStyle(color:Colors.white, fontSize: 14, fontWeight: FontWeight.bold),),
-                           ],
-                         ),
-                       )
-                     ],
-                   )
-                )
-              ),
-            )
-          ]),
+                    child: Container(
+                        decoration: ShapeDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.grey, Colors.white70],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: [0.1, 0.6],
+                            tileMode: TileMode.clamp,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(32.0)),
+                          ),
+                        ),
+                        child: Container(
+                            width: MediaQuery.of(context).size.width,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(40.0),
+                                  topRight: Radius.circular(40.0)),
+                              color: Color(0xFFEB3A18),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Card(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(90.0),
+                                      side: BorderSide(
+                                          width: 1, color: Colors.grey)),
+                                  child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Image.network(
+                                        'https://st.depositphotos.com/2101611/3925/v/600/depositphotos_39258143-stock-illustration-businessman-avatar-profile-picture.jpg',
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.fill,
+                                      )),
+                                ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 30, 0, 0),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        name,
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        adress,
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ))),
+                  )
+                ]),
         ),
         Container(
           width: MediaQuery.of(context).size.width,

@@ -75,7 +75,8 @@ class _KategoriListeState extends State<KategoriListe> {
       var result = jsonDecode(response.body);
 
       //  print(result['data'][0]['_id']);
-      for (var i = 0; i < result.length; i++) {
+      print(result['data']);
+      for (var i = 0; i < result['data'].length; i++) {
         setState(() {
           category.add(Category(
               name: result['data'][i]['name'],

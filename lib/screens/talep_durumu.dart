@@ -12,9 +12,12 @@ import 'package:showmarket/screens/isin_yapildigini_onayla.dart';
 import 'package:http/http.dart' as http;
 import 'HizmetVereninProfiliBuradaKullanılcakOlan!/hizmet_verenin_profili.dart';
 
+  var isLoading = false;
+
 class TalepDurumu extends StatelessWidget {
   final int state;
   final String id;
+
   TalepDurumu({required this.state, required this.id}) : super();
 
   @override
@@ -31,8 +34,12 @@ class TalepDurumu extends StatelessWidget {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                 //Deneme(state: this.state, context: context, demandId: this.id,)
-                  TalepIcerik(state: this.state, context: context, demandId: this.id,)
+                  //Deneme(state: this.state, context: context, demandId: this.id,)
+                  TalepIcerik(
+                    state: this.state,
+                    context: context,
+                    demandId: this.id,
+                  )
                 ],
               ),
             ),
@@ -61,7 +68,11 @@ class TalepIcerik extends StatefulWidget {
 }
 
 class _TalepIcerikState extends State<TalepIcerik> {
+
   Future<void> getDemands() async {
+    setState(() {
+      isLoading = true;
+    });
     print(widget.demandId + " aydiii");
     demandDetail.clear();
     print("fonksiyon başladı");
@@ -96,12 +107,18 @@ class _TalepIcerikState extends State<TalepIcerik> {
             offerPrice: result['data']['offerPrice']));
         print(demandDetail[0].company);
       });
+      setState(() {
+        isLoading = false;
+      });
     } else {
+      setState(() {
+        isLoading = false;
+      });
       throw Exception().toString();
     }
   }
 
- @override
+  @override
   void initState() {
     print('dodo');
     getDemands();
@@ -109,48 +126,58 @@ class _TalepIcerikState extends State<TalepIcerik> {
   }
 
   @override
-  var teklifVerildi = Column(
-    children: [
-      Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 30.0),
-            child: Text(
-              demandDetail[0].service[0][0].toString(),
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-          ),
-          SizedBox(
-            height: 5,
-          ),
-        ],
-      ),
-      Padding(
-        padding: const EdgeInsets.only(right: 270.0, bottom: 5),
-        child: Row(
+  var teklifVerildi = isLoading
+      ? Padding(
+          padding: const EdgeInsets.fromLTRB(0, 350, 0, 0),
+          child: Center(child: CircularProgressIndicator()),
+        )
+      : Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 37.0),
-              child: Text(
-                demandDetail[0].service[0][3].toString(),
-                style: TextStyle(fontSize: 12),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 190.0),
-              child: Text(
-                demandDetail[0].offerPrice,
-                style: TextStyle(
-                  color: Color(0xFFEB3A18),
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 30.0),
+                  child: Text(
+                    demandDetail[0].service[0][0].toString(),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
+                SizedBox(
+                  height: 5,
+                ),
+              ],
             ),
+            Padding(
+              padding: const EdgeInsets.only(right: 270.0, bottom: 5),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 37.0),
+                    child: Text(
+                      demandDetail[0].service[0][3].toString(),
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 190.0),
+                    child: Text(
+                      demandDetail[0].offerPrice,
+                      style: TextStyle(
+                        color: Color(0xFFEB3A18),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
           ],
-        ),
-      )
-    ],
-  );
-  var teklifBekliyor = Column(
+        );
+  var teklifBekliyor =  isLoading
+              ? Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 350, 0, 0),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : Column(
     children: [
       Row(
         children: [
@@ -191,7 +218,12 @@ class _TalepIcerikState extends State<TalepIcerik> {
       )
     ],
   );
-  var organizasyonTamam = Column(
+  var organizasyonTamam =  isLoading
+              ? Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 350, 0, 0),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : Column(
     children: [
       Row(
         children: [
@@ -235,8 +267,11 @@ class _TalepIcerikState extends State<TalepIcerik> {
   Widget build(BuildContext context) {
     print(widget.demandId + "hatalı widget");
     return Container(
-      child: demandDetail[0].id.isEmpty
-          ? Container()
+      child: isLoading
+          ? Padding(
+              padding: const EdgeInsets.fromLTRB(0, 350, 0, 0),
+              child: Center(child: CircularProgressIndicator()),
+            )
           : Column(
               children: [
                 Padding(
@@ -542,9 +577,10 @@ class _TalepIcerikState extends State<TalepIcerik> {
                                               MaterialPageRoute(
                                                   builder: (context) =>
                                                       IsinYapildiginiOnayla(
-                                                        companyName: demandDetail[0]
-                                                            .service[0][2]
-                                                            .toString(),
+                                                        companyName:
+                                                            demandDetail[0]
+                                                                .service[0][2]
+                                                                .toString(),
                                                         title: demandDetail[0]
                                                             .service[0][3]
                                                             .toString(),
@@ -598,9 +634,11 @@ class _TalepIcerikState extends State<TalepIcerik> {
                                                                     .service[0]
                                                                         [2]
                                                                     .toString(),
-                                                            title: demandDetail[0]
-                                                                .service[0][3]
-                                                                .toString(),
+                                                            title:
+                                                                demandDetail[0]
+                                                                    .service[0]
+                                                                        [3]
+                                                                    .toString(),
                                                           )));
                                             },
                                             child: Text(

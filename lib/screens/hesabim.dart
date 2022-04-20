@@ -4,8 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
 import 'package:showmarket/main.dart';
 import 'package:showmarket/screens/Favoriler.dart';
+import 'package:showmarket/screens/anasayfa.dart';
 import 'package:showmarket/screens/guvenlik.dart';
 import 'package:showmarket/screens/profilim.dart';
+import 'package:showmarket/screens_service_provider/my_services.dart';
 
 import 'adreslerim.dart';
 
@@ -33,15 +35,15 @@ class _HesabimState extends State<Hesabim> {
   void getSession() async {
 
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      username = prefs.getString('username').toString();
-      name = prefs.getString('name').toString();
-      surname = prefs.getString('surname').toString();
-      gsm = prefs.getString('gsm').toString();
-      userId = prefs.getString('id').toString();
-    });
+    // setState(() {
+    //   username = prefs.getString('username').toString();
+    //   name = prefs.getString('name').toString();
+    //   surname = prefs.getString('surname').toString();
+    //   gsm = prefs.getString('gsm').toString();
+    //   userId = prefs.getString('id').toString();
+    // });
 
-    print(userId+username+name);
+    // print(userId+username+name);
 
   }
   @override
@@ -73,22 +75,33 @@ class _HesabimState extends State<Hesabim> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Center(
-                              child: Container(
-                                width: double.infinity,
-                                height: 210,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    alignment: Alignment.centerRight,
-                                    image:
-                                        AssetImage('assets/yukariEklenti.png'),
-                                    fit: BoxFit.fill,
-                                  ),
-                                ),
-                                child: Image(
-                                  image: AssetImage('assets/logo.png'),
+                              child: RaisedButton(
+                                color: Colors.white,
+                                elevation: 0,
+                                onPressed: (){
+                                    Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => Anasayfa()),
+      );
+                                  print('deneme');
+                                },
+                                child: Container(
+                                  width: double.infinity,
                                   height: 210,
-                                  width: 250,
-                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      alignment: Alignment.centerRight,
+                                      image:
+                                          AssetImage('assets/yukariEklenti.png'),
+                                      fit: BoxFit.fill,
+                                    ),
+                                  ),
+                                  child: Image(
+                                    image: AssetImage('assets/logo.png'),
+                                    height: 210,
+                                    width: 250,
+                                    alignment: Alignment.center,
+                                  ),
                                 ),
                               ),
                             ),
@@ -139,6 +152,35 @@ class _HesabimState extends State<Hesabim> {
                           },
                           child: Text(
                             'Profilim',
+                            style: TextStyle(color: Colors.black, fontSize: 18),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                   SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Padding(
+                          padding: const EdgeInsets.fromLTRB(40, 0, 0, 0),
+                          child: SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: Icon(Icons.production_quantity_limits_outlined))),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => MyServices()),
+                            );
+                          },
+                          child: Text(
+                            'Hizmetlerim',
                             style: TextStyle(color: Colors.black, fontSize: 18),
                           ),
                         ),

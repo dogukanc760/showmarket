@@ -1,6 +1,59 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:showmarket/models/busines_user.dart';
+import 'package:showmarket/screens/karsilama.dart';
+import 'package:showmarket/screens_service_provider/Kay%C4%B1t/giris_yap_hizmet.dart';
 import 'package:showmarket/screens_service_provider/karsilama_hizmet.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+String username = '';
+final gsm = TextEditingController();
+final password = TextEditingController();
+final mail = TextEditingController();
+final fullName = TextEditingController();
+showAlertDialogFailed(BuildContext context) {
+  // Create button
+  Widget okButton = FlatButton(
+    child: Text("OK"),
+    onPressed: () {
+      Navigator.of(context).pop();
+    },
+  );
+
+  // Create AlertDialog
+  AlertDialog alert = AlertDialog(
+    title: Text("Kayıt Başarısız!"),
+    content: Text("Bilgilerinizi kontrol edin."),
+    actions: [],
+  );
+
+  // show the dialog
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+
+void foo(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  username = prefs.getString('username').toString();
+
+  if (!username.isEmpty) {
+    print(prefs.getString('username').toString());
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => GirisHizmet()),
+    );
+  } else {
+    print("boş");
+  }
+}
 
 class BireyselKayit extends StatelessWidget {
   const BireyselKayit({Key? key}) : super(key: key);
@@ -39,6 +92,8 @@ class MyCustomFormState extends State<MyCustomForm> {
   bool _passwordVisible = true;
   bool _offer = false;
   bool _isSelected = false;
+  int statusCode = 0;
+  var isLoading = false;
   _launchURL() async {
     const url = 'https://docs.google.com/';
     if (await canLaunch(url)) {
@@ -48,12 +103,74 @@ class MyCustomFormState extends State<MyCustomForm> {
     }
   }
 
+  Future<User> register(String mail, String password, String fullname, String gsm,BuildContext context) async {
+    setState(() {
+      isLoading = true;
+    });
+    final response = await http.post(
+      Uri.parse('https://showmarket-api.herokuapp.com/api/auth/register-business'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(
+          <String, String>{'gsm': gsm, 'mail': mail, 'name':fullname, 'surname':fullname,'password': password,
+         }),
+    );
+
+    if (response.statusCode == 201) {
+      statusCode = 200;
+      print(response.statusCode);
+      final prefs = await SharedPreferences.getInstance();
+      var result = jsonDecode(response.body);
+      print(result['data']);
+      prefs.setString('username', result['data']['mail']);
+      prefs.setString('name', result['data']['name']);
+      prefs.setString('surname', result['data']['surname']);
+      prefs.setString('gsm', result['data']['gsm']);
+      prefs.setString('id', result['data']['_id']);
+      prefs.setString('adress', jsonEncode(result['data']['adress']));
+      prefs.setString('img', '');
+
+      print(prefs.getString('adress'));
+      setState(() {
+        isLoading = false;
+      });
+      foo(context);
+
+      return User.fromJson(jsonDecode(response.body));
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      showAlertDialogFailed(context);
+      throw Exception();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
     return SafeArea(
       child: SingleChildScrollView(
-        child: Form(
+        child: isLoading
+          ? Padding(
+              padding: const EdgeInsets.fromLTRB(0, 350, 0, 0),
+              child: Column(
+                children: [
+                  Center(child: CircularProgressIndicator()),
+                  Center(
+                      child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Kayıt Yapılıyor...',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ))
+                ],
+              ),
+            )
+          : Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,6 +209,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(40, 20, 40, 0),
                   child: TextFormField(
+                    controller: fullName,
                     style: TextStyle(fontSize: 14),
                     // The validator receives the text that the user has entered.
                     decoration: InputDecoration(
@@ -134,6 +252,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(40, 10, 40, 0),
                   child: TextFormField(
+                    controller: mail,
                     style: TextStyle(fontSize: 14),
                     // The validator receives the text that the user has entered.
                     decoration: InputDecoration(
@@ -176,6 +295,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(40, 10, 40, 0),
                   child: TextFormField(
+                    controller: gsm,
                     style: TextStyle(fontSize: 14),
                     // The validator receives the text that the user has entered.
                     decoration: InputDecoration(
@@ -218,6 +338,7 @@ class MyCustomFormState extends State<MyCustomForm> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(40, 10, 40, 0),
                 child: TextFormField(
+                  controller: password,
                   style: TextStyle(fontSize: 12),
                   obscureText: _passwordVisible,
                   enableSuggestions: false,
@@ -299,19 +420,10 @@ class MyCustomFormState extends State<MyCustomForm> {
                         borderRadius: BorderRadius.circular(45),
                       ),
                       onPressed: () {
-                        // Validate returns true if the form is valid, or false otherwise.
-                        /* if (_formKey.currentState!.validate()) {
-                                // If the form is valid, display a snackbar. In the real world,
-                                // you'd often call a server or save the information in a database.
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Processing Data')),
-                                );
-                              }*/
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => Karsilama_Hizmet()),
-                        );
+                        register(mail.text, password.text, fullName.text, gsm.text, context);
+
+
+
                       },
                       child: const Text('Kayıt Ol'),
                     ),

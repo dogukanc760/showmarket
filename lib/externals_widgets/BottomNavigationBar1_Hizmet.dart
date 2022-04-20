@@ -103,9 +103,7 @@ class _NavigationBottomHizmetState extends State<NavigationBottomHizmet> {
                 ),
               ),
             ),
-            title: Padding(
-              padding: const EdgeInsets.only(top: 7),
-            ),
+            label: '',
           ),
           BottomNavigationBarItem(
             backgroundColor: Colors.transparent,
@@ -137,9 +135,7 @@ class _NavigationBottomHizmetState extends State<NavigationBottomHizmet> {
                 ),
               ),
             ),
-            title: Padding(
-              padding: const EdgeInsets.only(top: 7),
-            ),
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Container(
@@ -170,9 +166,7 @@ class _NavigationBottomHizmetState extends State<NavigationBottomHizmet> {
                 ),
               ),
             ),
-            title: Padding(
-              padding: const EdgeInsets.only(top: 10),
-            ),
+            label: '',
           ),
           BottomNavigationBarItem(
             backgroundColor: Colors.transparent,
@@ -204,9 +198,7 @@ class _NavigationBottomHizmetState extends State<NavigationBottomHizmet> {
                 ),
               ),
             ),
-            title: Padding(
-              padding: const EdgeInsets.only(top: 7),
-            ),
+            label: '',
           ),
           BottomNavigationBarItem(
             backgroundColor: Colors.transparent,
@@ -238,9 +230,7 @@ class _NavigationBottomHizmetState extends State<NavigationBottomHizmet> {
                 ),
               ),
             ),
-            title: Padding(
-              padding: const EdgeInsets.only(top: 7),
-            ),
+            label: '',
           ),
         ],
       ),

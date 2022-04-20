@@ -1,9 +1,23 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:showmarket/models/service.dart';
 import 'package:showmarket/screens/Favoriler.dart';
 import 'package:showmarket/screens/anasayfa.dart';
 import 'package:showmarket/screens/hesabim.dart';
 import 'package:showmarket/screens/kategoriler.dart';
 import 'package:showmarket/screens/taleplerim.dart';
+
+import 'package:http/http.dart' as http;
+
+
+
+var searchText = TextEditingController();
+var isLoading = false;
+List<Service> services=[];
+bool _isAvailable = false;
+  bool _isListening = false;
+   String resultText = "";
 
 class NavigationBottom extends StatefulWidget {
   const NavigationBottom({Key? key}) : super(key: key);
@@ -11,9 +25,93 @@ class NavigationBottom extends StatefulWidget {
   @override
   _NavigationBottomState createState() => _NavigationBottomState();
 }
+ showAlertDialogFailed(BuildContext context) {
+  // Create button
+  Widget okButton = FlatButton(
+    child: Text("OK"),
+    onPressed: () {
+      Navigator.of(context).pop();
+    },
+  );
+
+  // Create AlertDialog
+  AlertDialog alert = AlertDialog(
+    title: Text("Kayıt Bulunamadı!"),
+    content: Text("Arama içeriğinize göre bir kayıt bulamadık."),
+    actions: [],
+  );
+
+  // show the dialog
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
 
 class _NavigationBottomState extends State<NavigationBottom> {
+
+ 
+
   int seciliSayfa = 0;
+  
+   Future<void> getService() async {
+
+    
+
+    final response = await http.get(
+      Uri.parse(
+          'https://showmarket-api.herokuapp.com/api/service/get-by-name/'+searchText.text),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print(response.statusCode);
+      services.clear();
+      var result = jsonDecode(response.body);
+      print(result['data']);
+      //  print(result['data'][0]['_id']);
+      if (result['data'].length > 0) {
+        setState(() {
+          for (var i = 0; i < result['data'].length; i++) {
+            services.add(Service(
+                title: result['data'][i]['title'],
+                sector: result['data'][i]['sector'].cast<String>(),
+                ratingCount: result['data'][i]['ratingCount'],
+                rating: result['data'][i]['rating'],
+                questions: result['data'][i]['questions'].cast<String>(),
+                priceTwo: result['data'][i]['priceTwo'],
+                personCount: result['data'][i]['personCount'],
+                name: result['data'][i]['name'],
+                img: result['data'][i]['img'],
+                distinct: result['data'][i]['distinct'].cast<String>(),
+                descVideos: result['data'][i]['descVideos'].cast<String>(),
+                descImg: result['data'][i]['descImg'].cast<String>(),
+                companyName: result['data'][i]['companyName'],
+                comments: result['data'][i]['comments'].cast<String>(),
+                about: result['data'][i]['about'],
+                description: result['data'][i]['description'],
+                answer: result['data'][i]['answer'].cast<String>(),
+                user: result['data'][i]['user'],
+                price: result['data'][i]['price'],
+                category: result['data'][i]['category'].cast<String>(),
+                city: result['data'][i]['city'].cast<String>()
+            ));
+          }
+        });
+      }
+    } else {
+      
+      throw Exception();
+    }
+  }
+ 
+
+
+
   void sayfaDegistir(int index) {
     setState(() {
       seciliSayfa = index;
@@ -49,8 +147,10 @@ class _NavigationBottomState extends State<NavigationBottom> {
     }
   }
   TextEditingController _textFieldController = TextEditingController();
-
+   
+   
   _displayDialog(BuildContext context) async {
+    
     return showDialog(
         context: context,
         builder: (context) {
@@ -58,7 +158,7 @@ class _NavigationBottomState extends State<NavigationBottom> {
             backgroundColor: Color(0xFFEB3A18),
             title: Text('Arama İçeriğinizi Giriniz', style: TextStyle(color: Colors.white),),
             content: TextField(
-              controller: _textFieldController,
+              controller: searchText,
               textInputAction: TextInputAction.go,
               keyboardType: TextInputType.name,
               decoration: InputDecoration(hintText: "Arama İçeriğiniz", hintStyle:TextStyle(color: Colors.white), ),
@@ -67,6 +167,38 @@ class _NavigationBottomState extends State<NavigationBottom> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  !isLoading?new FlatButton(
+                    child: Row(
+                      children: [
+                        Icon(Icons.multitrack_audio_outlined, color: Colors.white, size:20),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+                          child: Text('Sesle Ara', style: TextStyle(color: Colors.white),),
+                        ),
+                      ],
+                    ),//new Text('Ara', style: TextStyle(color: Colors.white),),
+                    onPressed: () {
+                      setState(() {
+                        isLoading=!isLoading;
+                      });
+                    },
+                  ):new FlatButton(
+                    child: Row(
+                      children: [
+                        Icon(Icons.my_library_music_sharp, color: Colors.white, size:20),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+                          child: Text('Dinleniyor...', style: TextStyle(color: Colors.white),),
+                        ),
+                      ],
+                    ),//new Text('Ara', style: TextStyle(color: Colors.white),),
+                    onPressed: () {
+                      setState(() {
+                        isLoading=!isLoading;
+                      });
+                      showAlertDialogFailed(context);
+                    },
+                  ),
                   new FlatButton(
                     child: Row(
                       children: [
@@ -78,7 +210,7 @@ class _NavigationBottomState extends State<NavigationBottom> {
                       ],
                     ),//new Text('Ara', style: TextStyle(color: Colors.white),),
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      showAlertDialogFailed(context);
                     },
                   ),
                   new FlatButton(
@@ -101,6 +233,9 @@ class _NavigationBottomState extends State<NavigationBottom> {
           );
         });
   }
+
+  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -156,9 +291,7 @@ class _NavigationBottomState extends State<NavigationBottom> {
                   ),
                 ),
               ),
-              title: Padding(
-                padding: const EdgeInsets.only(top: 7),
-              ),
+              label: '',
             ),
             BottomNavigationBarItem(
               backgroundColor: Colors.transparent,
@@ -190,9 +323,7 @@ class _NavigationBottomState extends State<NavigationBottom> {
                   ),
                 ),
               ),
-              title: Padding(
-                padding: const EdgeInsets.only(top: 7),
-              ),
+              label: '',
             ),
             BottomNavigationBarItem(
               icon: Container(
@@ -223,9 +354,7 @@ class _NavigationBottomState extends State<NavigationBottom> {
                   ),
                 ),
               ),
-              title: Padding(
-                padding: const EdgeInsets.only(top: 10),
-              ),
+              label: '',
             ),
             BottomNavigationBarItem(
               backgroundColor: Colors.transparent,
@@ -257,14 +386,12 @@ class _NavigationBottomState extends State<NavigationBottom> {
                   ),
                 ),
               ),
-              title: Padding(
-                padding: const EdgeInsets.only(top: 7),
-              ),
+              label: '',
             ),
             BottomNavigationBarItem(
               backgroundColor: Colors.transparent,
               icon: Container(
-                height: 135,
+                height: 136,
                 alignment: Alignment.bottomCenter,
                 child: Container(
                   height: 50,
@@ -291,9 +418,7 @@ class _NavigationBottomState extends State<NavigationBottom> {
                   ),
                 ),
               ),
-              title: Padding(
-                padding: const EdgeInsets.only(top: 7),
-              ),
+              label: '',
             ),
           ],
         ),

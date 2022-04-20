@@ -44,7 +44,7 @@ class _FotografEklemeHizmetState extends State<FotografEklemeHizmet> {
   var imageFile3;
   var imageFile4;
   _getFromGallery() async {
-    PickedFile pickedFile = await ImagePicker().getImage(
+    PickedFile? pickedFile = await ImagePicker().getImage(
       source: ImageSource.gallery,
       maxWidth: 1800,
       maxHeight: 1800,
@@ -58,7 +58,7 @@ class _FotografEklemeHizmetState extends State<FotografEklemeHizmet> {
 
   /// Get from Camera
   _getFromCamera() async {
-    PickedFile pickedFile = await ImagePicker().getImage(
+    PickedFile? pickedFile = await ImagePicker().getImage(
       source: ImageSource.camera,
       maxWidth: 1800,
       maxHeight: 1800,
@@ -71,7 +71,7 @@ class _FotografEklemeHizmetState extends State<FotografEklemeHizmet> {
   }
 
   _getFromGallery2() async {
-    PickedFile pickedFile = await ImagePicker().getImage(
+    PickedFile? pickedFile = await ImagePicker().getImage(
       source: ImageSource.gallery,
       maxWidth: 1800,
       maxHeight: 1800,
@@ -85,7 +85,7 @@ class _FotografEklemeHizmetState extends State<FotografEklemeHizmet> {
 
   /// Get from Camera
   _getFromCamera2() async {
-    PickedFile pickedFile = await ImagePicker().getImage(
+    PickedFile? pickedFile = await ImagePicker().getImage(
       source: ImageSource.camera,
       maxWidth: 1800,
       maxHeight: 1800,
@@ -98,7 +98,7 @@ class _FotografEklemeHizmetState extends State<FotografEklemeHizmet> {
   }
 
   _getFromGallery3() async {
-    PickedFile pickedFile = await ImagePicker().getImage(
+    PickedFile? pickedFile = await ImagePicker().getImage(
       source: ImageSource.gallery,
       maxWidth: 1800,
       maxHeight: 1800,
@@ -112,7 +112,7 @@ class _FotografEklemeHizmetState extends State<FotografEklemeHizmet> {
 
   /// Get from Camera
   _getFromCamera3() async {
-    PickedFile pickedFile = await ImagePicker().getImage(
+    PickedFile? pickedFile = await ImagePicker().getImage(
       source: ImageSource.camera,
       maxWidth: 1800,
       maxHeight: 1800,
@@ -125,7 +125,7 @@ class _FotografEklemeHizmetState extends State<FotografEklemeHizmet> {
   }
 
   _getFromGallery4() async {
-    PickedFile pickedFile = await ImagePicker().getImage(
+    PickedFile? pickedFile = await ImagePicker().getImage(
       source: ImageSource.gallery,
       maxWidth: 1800,
       maxHeight: 1800,
@@ -139,7 +139,7 @@ class _FotografEklemeHizmetState extends State<FotografEklemeHizmet> {
 
   /// Get from Camera
   _getFromCamera4() async {
-    PickedFile pickedFile = await ImagePicker().getImage(
+    PickedFile? pickedFile = await ImagePicker().getImage(
       source: ImageSource.camera,
       maxWidth: 1800,
       maxHeight: 1800,

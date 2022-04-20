@@ -103,7 +103,7 @@ Future<User> login(String mail, String password, BuildContext context) async {
     prefs.setString('gsm', result['data']['gsm']);
     prefs.setString('id', result['data']['_id']);
     prefs.setString('adress', jsonEncode(result['data']['adress']));
-    prefs.setString('img', result['data']['img']);
+    prefs.setString('img', '');
    
     print(prefs.getString('adress'));
     foo(context);
