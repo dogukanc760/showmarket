@@ -633,7 +633,7 @@ class _MyServicesState extends State<MyServices> {
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode({
-          'user': userIdd,
+          'user': userId,
           'name': name,
           'sector': sector,
           'category': category,
@@ -644,7 +644,7 @@ class _MyServicesState extends State<MyServices> {
           'personCount': personCount,
           'description': description,
           'img':'x',
-          'companyName':namee,
+          'companyName':name,
           'answer':'x',
           'question':'x',
           'distinct':'x',
@@ -685,6 +685,7 @@ class _MyServicesState extends State<MyServices> {
   @override
   void initState() {
     // TODO: implement initState
+    print(userIdd + "asdfasdfasdfafsd");
     super.initState();
     getCategory();
   }
@@ -882,7 +883,7 @@ class _ContentState extends State<Content> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    print(userId + "12asdasdasd");
     getService();
   }
 
