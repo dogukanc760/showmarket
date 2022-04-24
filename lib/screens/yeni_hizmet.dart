@@ -505,6 +505,7 @@ class _YeniHizmetState extends State<YeniHizmet> {
                               ),
                             ),
                           ),
+
                           Padding(
                             padding: const EdgeInsets.fromLTRB(0, 40, 0, 0),
                             child: SizedBox(

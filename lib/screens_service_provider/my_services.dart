@@ -1,7 +1,11 @@
 import 'dart:convert';
-
+import 'dart:io';
+import 'dart:async';
+import 'package:path/path.dart';
+import 'package:async/async.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showmarket/externals_widgets/BottomNavigationBar1.dart';
@@ -28,6 +32,9 @@ var priceTwoController = TextEditingController();
 var personCountController = TextEditingController();
 var descriptionController = TextEditingController();
 var nameController = TextEditingController();
+bool isloaded = false;
+late File _image;
+var result;
 
 class MyServices extends StatefulWidget {
   const MyServices({Key? key}) : super(key: key);
@@ -36,7 +43,51 @@ class MyServices extends StatefulWidget {
   State<MyServices> createState() => _MyServicesState();
 }
 
+final picker = ImagePicker();
+
 class _MyServicesState extends State<MyServices> {
+  Future<void> getImage() async {
+    final pickedFile = await picker.getImage(source: ImageSource.gallery);
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
+
+  upload(File imageFile) async {
+    // open a bytestream
+    var stream =
+        new http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
+    // get file length
+    var length = await imageFile.length();
+
+    // string to uri
+    var uri = Uri.parse("http://192.168.0.8:3000/upload");
+
+    // create multipart request
+    var request = new http.MultipartRequest("POST", uri);
+
+    // multipart that takes file
+    var multipartFile = new http.MultipartFile('myFile', stream, length,
+        filename: basename(imageFile.path));
+
+    // add file to multipart
+    request.files.add(multipartFile);
+
+    // send
+    var response = await request.send();
+    print(response.statusCode);
+
+    // listen for response
+    response.stream.transform(utf8.decoder).listen((value) {
+      print(value);
+    });
+  }
+
   void showCustomDialog(BuildContext context) {
     showGeneralDialog(
       context: context,
@@ -47,203 +98,250 @@ class _MyServicesState extends State<MyServices> {
       pageBuilder: (_, __, ___) {
         return Center(
           child: Container(
-            width:MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height*0.8,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height * 0.8,
             child: Material(
               child: SizedBox(
                 width: 550,
-                child:Padding(
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(30, 10, 30, 0),
-                  child: Column(
-                  children: <Widget>[
-                    SizedBox(
-                      height: 65,
-                      width: MediaQuery.of(context).size.width,
-                      child: DropdownSearch<String>(
-                        validator: (v) => v == null ? "required field" : null,
-                        mode: Mode.MENU,
-                        dropdownSearchDecoration: InputDecoration(
-                          icon: Icon(Icons.category),
-                          fillColor: Colors.white,
-                          hoverColor: Colors.white,
-                          hintText: "Seçilmesi Zorunlu Alan",
-                          hintStyle: TextStyle(fontSize: 12),
-                          labelText: "Kategori",
-                          labelStyle: TextStyle(
-                              fontSize: 15,
-                              color: Colors.grey.shade700,
-                              fontWeight: FontWeight.bold),
-                          filled: true,
-                          border: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF01689A)),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: <Widget>[
+                        SizedBox(
+                          height: 65,
+                          width: MediaQuery.of(context).size.width,
+                          child: DropdownSearch<String>(
+                            validator: (v) =>
+                                v == null ? "required field" : null,
+                            mode: Mode.MENU,
+                            dropdownSearchDecoration: InputDecoration(
+                              icon: Icon(Icons.category),
+                              fillColor: Colors.white,
+                              hoverColor: Colors.white,
+                              hintText: "Seçilmesi Zorunlu Alan",
+                              hintStyle: TextStyle(fontSize: 12),
+                              labelText: "Kategori",
+                              labelStyle: TextStyle(
+                                  fontSize: 15,
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.bold),
+                              filled: true,
+                              border: UnderlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Color(0xFF01689A)),
+                              ),
+                            ),
+                            showAsSuffixIcons: true,
+                            clearButtonBuilder: (_) => Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: const Icon(
+                                Icons.clear,
+                                size: 24,
+                                color: Colors.black,
+                              ),
+                            ),
+                            dropdownButtonBuilder: (_) => Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: const Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 35,
+                                color: Colors.black,
+                              ),
+                            ),
+                            showSelectedItems: true,
+                            items: categoriesSt,
+                            showClearButton: true,
+                            onChanged: (value) {
+                              setState(() {
+                                category = value.toString();
+                              });
+                              print(category + "category");
+                              getSector(category);
+                            },
+                            popupItemDisabled: (String? s) =>
+                                s?.startsWith('I') ?? true,
                           ),
                         ),
-                        showAsSuffixIcons: true,
-                        clearButtonBuilder: (_) => Padding(
+                        SizedBox(
+                          height: 65,
+                          width: MediaQuery.of(context).size.width,
+                          child: DropdownSearch<String>(
+                            validator: (v) =>
+                                v == null ? "required field" : null,
+                            mode: Mode.MENU,
+                            dropdownSearchDecoration: InputDecoration(
+                              icon: Icon(Icons.local_fire_department_sharp),
+                              fillColor: Colors.white,
+                              hoverColor: Colors.white,
+                              hintText: "Seçilmesi Zorunlu Alan",
+                              hintStyle: TextStyle(fontSize: 12),
+                              labelText: "Sektör",
+                              labelStyle: TextStyle(
+                                  fontSize: 15,
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.bold),
+                              filled: true,
+                              border: UnderlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Color(0xFF01689A)),
+                              ),
+                            ),
+                            showAsSuffixIcons: true,
+                            clearButtonBuilder: (_) => Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: const Icon(
+                                Icons.clear,
+                                size: 24,
+                                color: Colors.black,
+                              ),
+                            ),
+                            dropdownButtonBuilder: (_) => Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: const Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 35,
+                                color: Colors.black,
+                              ),
+                            ),
+                            showSelectedItems: true,
+                            items: sectorsSt,
+                            showClearButton: true,
+                            onChanged: (value) {
+                              setState(() {
+                                sector = value.toString();
+                              });
+                              print(sector + "sektör");
+                            },
+                            popupItemDisabled: (String? s) =>
+                                s?.startsWith('I') ?? true,
+                          ),
+                        ),
+                        TextField(
+                          controller: nameController,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            icon: Icon(Icons.drive_file_rename_outline),
+                            labelText: 'Hizmet Adı',
+                          ),
+                        ),
+                        TextField(
+                          controller: cityController,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            icon: Icon(Icons.location_city),
+                            labelText: 'Şehir',
+                          ),
+                        ),
+                        TextField(
+                          controller: aboutController,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            icon: Icon(Icons.app_blocking_outlined),
+                            labelText: 'Hakkında Yazısı',
+                          ),
+                        ),
+                        TextField(
+                          controller: priceOneController,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            icon: Icon(Icons.price_change),
+                            labelText: 'Fiyat',
+                          ),
+                        ),
+                        TextField(
+                          controller: priceTwoController,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            icon: Icon(Icons.price_change_sharp),
+                            labelText: 'İkinci Fiyat',
+                          ),
+                        ),
+                        TextField(
+                          controller: personCountController,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            icon: Icon(Icons.supervisor_account),
+                            labelText: 'Kişi Sayısı',
+                          ),
+                        ),
+                        TextField(
+                          controller: descriptionController,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            icon: Icon(
+                              Icons.description,
+                            ),
+                            labelText: 'Açıklama',
+                          ),
+                        ),
+                        Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: const Icon(
-                            Icons.clear,
-                            size: 24,
-                            color: Colors.black,
+                          child: Text(
+                              'Hizmete ait görseller ve videolar \n (seçtiğiniz bütün görseller anında kaydedilir)',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16), textAlign:TextAlign.center,),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              color: Colors.deepOrange),
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              //  Text("Belge Seçin", style:TextStyle(color: Colors.white)),
+                              FlatButton.icon(
+                                onPressed: () async => await getImage(),
+                                icon: Icon(Icons.upload_file),
+                                label: Text("Dosyalarım",
+                                    style: TextStyle(color: Colors.white)),
+                              ),
+
+                              FlatButton.icon(
+                                  onPressed: () => upload(_image),
+                                  icon: Icon(Icons.upload_rounded, size: 14),
+                                  label: Text("Şimdi Yükle",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 14))),
+                              isloaded
+                                  ? Image.network(
+                                      'https://showmarket-api.herokuapp.com/images/${result[0]['image']}')
+                                  : Text(''),
+                            ],
                           ),
                         ),
-                        dropdownButtonBuilder: (_) => Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: const Icon(
-                            Icons.keyboard_arrow_down,
-                            size: 35,
-                            color: Colors.black,
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: SizedBox(
+                            width: 250,
+                            child: FlatButton(
+                                color: Colors.deepOrange,
+                                onPressed: () => createService(
+                                    nameController.text,
+                                    cityController.text,
+                                    aboutController.text,
+                                    priceOneController.text,
+                                    priceTwoController.text,
+                                    personCountController.text,
+                                    descriptionController.text,
+                                    context),
+                                child: Text(
+                                  "Oluştur",
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 20),
+                                )),
                           ),
                         ),
-                        showSelectedItems: true,
-                        items: categoriesSt,
-                        showClearButton: true,
-                        onChanged: (value) {
-                          setState(() {
-                            category = value.toString();
-                          });
-                          print(category + "category");
-                          getSector(category);
-                        },
-                        popupItemDisabled: (String? s) =>
-                        s?.startsWith('I') ?? true,
-                      ),
+                      ],
                     ),
-                    SizedBox(
-                      height: 65,
-                      width: MediaQuery.of(context).size.width,
-                      child: DropdownSearch<String>(
-                        validator: (v) => v == null ? "required field" : null,
-                        mode: Mode.MENU,
-                        dropdownSearchDecoration: InputDecoration(
-                          icon: Icon(Icons.local_fire_department_sharp),
-                          fillColor: Colors.white,
-                          hoverColor: Colors.white,
-                          hintText: "Seçilmesi Zorunlu Alan",
-                          hintStyle: TextStyle(fontSize: 12),
-                          labelText: "Sektör",
-                          labelStyle: TextStyle(
-                              fontSize: 15,
-                              color: Colors.grey.shade700,
-                              fontWeight: FontWeight.bold),
-                          filled: true,
-                          border: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF01689A)),
-                          ),
-                        ),
-                        showAsSuffixIcons: true,
-                        clearButtonBuilder: (_) => Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: const Icon(
-                            Icons.clear,
-                            size: 24,
-                            color: Colors.black,
-                          ),
-                        ),
-                        dropdownButtonBuilder: (_) => Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: const Icon(
-                            Icons.keyboard_arrow_down,
-                            size: 35,
-                            color: Colors.black,
-                          ),
-                        ),
-                        showSelectedItems: true,
-                        items: sectorsSt,
-                        showClearButton: true,
-                        onChanged: (value) {
-                          setState(() {
-                            sector = value.toString();
-                          });
-                          print(sector + "sektör");
-                        },
-                        popupItemDisabled: (String? s) =>
-                        s?.startsWith('I') ?? true,
-                      ),
-                    ),
-                    TextField(
-                      controller: nameController,
-                      obscureText: false,
-                      decoration: InputDecoration(
-                        icon: Icon(Icons.drive_file_rename_outline),
-                        labelText: 'Hizmet Adı',
-                      ),
-                    ),
-                    TextField(
-                      controller: cityController,
-                      obscureText: false,
-                      decoration: InputDecoration(
-                        icon: Icon(Icons.location_city),
-                        labelText: 'Şehir',
-                      ),
-                    ),
-                    TextField(
-                      controller: aboutController,
-                      obscureText: false,
-                      decoration: InputDecoration(
-                        icon: Icon(Icons.app_blocking_outlined),
-                        labelText: 'Hakkında Yazısı',
-                      ),
-                    ),
-                    TextField(
-                      controller: priceOneController,
-                      obscureText: false,
-                      decoration: InputDecoration(
-                        icon: Icon(Icons.price_change),
-                        labelText: 'Fiyat',
-                      ),
-                    ),
-                    TextField(
-                      controller: priceTwoController,
-                      obscureText: false,
-                      decoration: InputDecoration(
-                        icon: Icon(Icons.price_change_sharp),
-                        labelText: 'İkinci Fiyat',
-                      ),
-                    ),
-                    TextField(
-                      controller: personCountController,
-                      obscureText: false,
-                      decoration: InputDecoration(
-                        icon: Icon(Icons.supervisor_account),
-                        labelText: 'Kişi Sayısı',
-                      ),
-                    ),
-                    TextField(
-                      controller: descriptionController,
-                      obscureText: false,
-                      decoration: InputDecoration(
-                        icon: Icon(
-                          Icons.description,
-                        ),
-                        labelText: 'Açıklama',
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: SizedBox(
-                        width:250,
-                        child: FlatButton( color: Colors.deepOrange,
-                            onPressed: () => createService(
-                                nameController.text,
-                                cityController.text,
-                                aboutController.text,
-                                priceOneController.text,
-                                priceTwoController.text,
-                                personCountController.text,
-                                descriptionController.text,
-                                context),child: Text(
-                          "Oluştur",
-                          style: TextStyle(color: Colors.white, fontSize: 20), )),
-                      ),
-                    ),
-                  ],
-              ),
+                  ),
                 ),
               ),
-            ),//SizedBox.expand(child: FlutterLogo()),
+            ), //SizedBox.expand(child: FlutterLogo()),
             margin: EdgeInsets.symmetric(horizontal: 20),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(40)),
+            decoration: BoxDecoration(
+                color: Colors.white, borderRadius: BorderRadius.circular(40)),
           ),
         );
       },
@@ -412,173 +510,175 @@ class _MyServicesState extends State<MyServices> {
         title: "Yeni Hizmet Oluşturma",
         content: Container(
           height: 550,
-          width:250,
-          child: Column(
-            children: <Widget>[
-              SizedBox(
-                height: 65,
-                width: 250,
-                child: DropdownSearch<String>(
-                  validator: (v) => v == null ? "required field" : null,
-                  mode: Mode.MENU,
-                  dropdownSearchDecoration: InputDecoration(
-                    icon: Icon(Icons.category),
-                    fillColor: Colors.white,
-                    hoverColor: Colors.white,
-                    hintText: "Seçilmesi Zorunlu Alan",
-                    hintStyle: TextStyle(fontSize: 12),
-                    labelText: "Kategori",
-                    labelStyle: TextStyle(
-                        fontSize: 15,
-                        color: Colors.grey.shade700,
-                        fontWeight: FontWeight.bold),
-                    filled: true,
-                    border: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF01689A)),
+          width: 250,
+          child: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                SizedBox(
+                  height: 65,
+                  width: 250,
+                  child: DropdownSearch<String>(
+                    validator: (v) => v == null ? "required field" : null,
+                    mode: Mode.MENU,
+                    dropdownSearchDecoration: InputDecoration(
+                      icon: Icon(Icons.category),
+                      fillColor: Colors.white,
+                      hoverColor: Colors.white,
+                      hintText: "Seçilmesi Zorunlu Alan",
+                      hintStyle: TextStyle(fontSize: 12),
+                      labelText: "Kategori",
+                      labelStyle: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.bold),
+                      filled: true,
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF01689A)),
+                      ),
                     ),
-                  ),
-                  showAsSuffixIcons: true,
-                  clearButtonBuilder: (_) => Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: const Icon(
-                      Icons.clear,
-                      size: 24,
-                      color: Colors.black,
+                    showAsSuffixIcons: true,
+                    clearButtonBuilder: (_) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: const Icon(
+                        Icons.clear,
+                        size: 24,
+                        color: Colors.black,
+                      ),
                     ),
-                  ),
-                  dropdownButtonBuilder: (_) => Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: const Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 35,
-                      color: Colors.black,
+                    dropdownButtonBuilder: (_) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 35,
+                        color: Colors.black,
+                      ),
                     ),
+                    showSelectedItems: true,
+                    items: categoriesSt,
+                    showClearButton: true,
+                    onChanged: (value) {
+                      setState(() {
+                        category = value.toString();
+                      });
+                      print(category + "category");
+                      getSector(category);
+                    },
+                    popupItemDisabled: (String? s) =>
+                        s?.startsWith('I') ?? true,
                   ),
-                  showSelectedItems: true,
-                  items: categoriesSt,
-                  showClearButton: true,
-                  onChanged: (value) {
-                    setState(() {
-                      category = value.toString();
-                    });
-                    print(category + "category");
-                    getSector(category);
-                  },
-                  popupItemDisabled: (String? s) =>
-                      s?.startsWith('I') ?? true,
                 ),
-              ),
-              SizedBox(
-                height: 65,
-                width: 250,
-                child: DropdownSearch<String>(
-                  validator: (v) => v == null ? "required field" : null,
-                  mode: Mode.MENU,
-                  dropdownSearchDecoration: InputDecoration(
-                    icon: Icon(Icons.local_fire_department_sharp),
-                    fillColor: Colors.white,
-                    hoverColor: Colors.white,
-                    hintText: "Seçilmesi Zorunlu Alan",
-                    hintStyle: TextStyle(fontSize: 12),
-                    labelText: "Sektör",
-                    labelStyle: TextStyle(
-                        fontSize: 15,
-                        color: Colors.grey.shade700,
-                        fontWeight: FontWeight.bold),
-                    filled: true,
-                    border: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF01689A)),
+                SizedBox(
+                  height: 65,
+                  width: 250,
+                  child: DropdownSearch<String>(
+                    validator: (v) => v == null ? "required field" : null,
+                    mode: Mode.MENU,
+                    dropdownSearchDecoration: InputDecoration(
+                      icon: Icon(Icons.local_fire_department_sharp),
+                      fillColor: Colors.white,
+                      hoverColor: Colors.white,
+                      hintText: "Seçilmesi Zorunlu Alan",
+                      hintStyle: TextStyle(fontSize: 12),
+                      labelText: "Sektör",
+                      labelStyle: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.bold),
+                      filled: true,
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF01689A)),
+                      ),
                     ),
-                  ),
-                  showAsSuffixIcons: true,
-                  clearButtonBuilder: (_) => Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: const Icon(
-                      Icons.clear,
-                      size: 24,
-                      color: Colors.black,
+                    showAsSuffixIcons: true,
+                    clearButtonBuilder: (_) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: const Icon(
+                        Icons.clear,
+                        size: 24,
+                        color: Colors.black,
+                      ),
                     ),
-                  ),
-                  dropdownButtonBuilder: (_) => Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: const Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 35,
-                      color: Colors.black,
+                    dropdownButtonBuilder: (_) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 35,
+                        color: Colors.black,
+                      ),
                     ),
+                    showSelectedItems: true,
+                    items: sectorsSt,
+                    showClearButton: true,
+                    onChanged: (value) {
+                      setState(() {
+                        sector = value.toString();
+                      });
+                      print(sector + "sektör");
+                    },
+                    popupItemDisabled: (String? s) =>
+                        s?.startsWith('I') ?? true,
                   ),
-                  showSelectedItems: true,
-                  items: sectorsSt,
-                  showClearButton: true,
-                  onChanged: (value) {
-                    setState(() {
-                      sector = value.toString();
-                    });
-                    print(sector + "sektör");
-                  },
-                  popupItemDisabled: (String? s) =>
-                      s?.startsWith('I') ?? true,
                 ),
-              ),
-              TextField(
-                controller: nameController,
-                obscureText: false,
-                decoration: InputDecoration(
-                  icon: Icon(Icons.drive_file_rename_outline),
-                  labelText: 'Hizmet Adı',
-                ),
-              ),
-              TextField(
-                controller: cityController,
-                obscureText: false,
-                decoration: InputDecoration(
-                  icon: Icon(Icons.location_city),
-                  labelText: 'Şehir',
-                ),
-              ),
-              TextField(
-                controller: aboutController,
-                obscureText: false,
-                decoration: InputDecoration(
-                  icon: Icon(Icons.app_blocking_outlined),
-                  labelText: 'Hakkında Yazısı',
-                ),
-              ),
-              TextField(
-                controller: priceOneController,
-                obscureText: false,
-                decoration: InputDecoration(
-                  icon: Icon(Icons.price_change),
-                  labelText: 'Fiyat',
-                ),
-              ),
-              TextField(
-                controller: priceTwoController,
-                obscureText: false,
-                decoration: InputDecoration(
-                  icon: Icon(Icons.price_change_sharp),
-                  labelText: 'İkinci Fiyat',
-                ),
-              ),
-              TextField(
-                controller: personCountController,
-                obscureText: false,
-                decoration: InputDecoration(
-                  icon: Icon(Icons.supervisor_account),
-                  labelText: 'Kişi Sayısı',
-                ),
-              ),
-              TextField(
-                controller: descriptionController,
-                obscureText: false,
-                decoration: InputDecoration(
-                  icon: Icon(
-                    Icons.description,
+                TextField(
+                  controller: nameController,
+                  obscureText: false,
+                  decoration: InputDecoration(
+                    icon: Icon(Icons.drive_file_rename_outline),
+                    labelText: 'Hizmet Adı',
                   ),
-                  labelText: 'Açıklama',
                 ),
-              ),
-            ],
+                TextField(
+                  controller: cityController,
+                  obscureText: false,
+                  decoration: InputDecoration(
+                    icon: Icon(Icons.location_city),
+                    labelText: 'Şehir',
+                  ),
+                ),
+                TextField(
+                  controller: aboutController,
+                  obscureText: false,
+                  decoration: InputDecoration(
+                    icon: Icon(Icons.app_blocking_outlined),
+                    labelText: 'Hakkında Yazısı',
+                  ),
+                ),
+                TextField(
+                  controller: priceOneController,
+                  obscureText: false,
+                  decoration: InputDecoration(
+                    icon: Icon(Icons.price_change),
+                    labelText: 'Fiyat',
+                  ),
+                ),
+                TextField(
+                  controller: priceTwoController,
+                  obscureText: false,
+                  decoration: InputDecoration(
+                    icon: Icon(Icons.price_change_sharp),
+                    labelText: 'İkinci Fiyat',
+                  ),
+                ),
+                TextField(
+                  controller: personCountController,
+                  obscureText: false,
+                  decoration: InputDecoration(
+                    icon: Icon(Icons.supervisor_account),
+                    labelText: 'Kişi Sayısı',
+                  ),
+                ),
+                TextField(
+                  controller: descriptionController,
+                  obscureText: false,
+                  decoration: InputDecoration(
+                    icon: Icon(
+                      Icons.description,
+                    ),
+                    labelText: 'Açıklama',
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         buttons: [
@@ -640,24 +740,22 @@ class _MyServicesState extends State<MyServices> {
           'city': city,
           'about': about,
           'price': priceOnee,
-          'priceTwo':priceTwoo,
+          'priceTwo': priceTwoo,
           'personCount': personCount,
           'description': description,
-          'img':'x',
-          'companyName':name,
-          'answer':'x',
-          'question':'x',
-          'distinct':'x',
-          'title':name,
-          'rating':rating,
-          'ratingCount':ratingCount,
-          'comments':'x',
-          'isActive':true,
-          'showHome':true,
-          'descImg':'x',
-          'descVideos':'x'
-
-
+          'img': 'x',
+          'companyName': name,
+          'answer': 'x',
+          'question': 'x',
+          'distinct': 'x',
+          'title': name,
+          'rating': rating,
+          'ratingCount': ratingCount,
+          'comments': 'x',
+          'isActive': true,
+          'showHome': true,
+          'descImg': 'x',
+          'descVideos': 'x'
         }),
       );
 
@@ -705,7 +803,7 @@ class _MyServicesState extends State<MyServices> {
                 child: GestureDetector(
                   onTap: () {
                     showCustomDialog(context);
-                   // _openPopup(context);
+                    // _openPopup(context);
                     /*  Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => YeniHizmet()),
@@ -798,14 +896,16 @@ class _ContentState extends State<Content> {
       ],
     ).show();
   }
-  Future<void> deleteService(int index, String serviceId) async {
+
+  Future<void> deleteService(
+      int index, String serviceId, BuildContext context) async {
     // service id ile api call at index ile listeden sli state nesnesi ile
     setState(() {
       serviceList.removeAt(index);
     });
     final response = await http.delete(
       Uri.parse(
-          'https://showmarket-api.herokuapp.com/api/service/'+serviceId),
+          'https://showmarket-api.herokuapp.com/api/service/' + serviceId),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -849,7 +949,7 @@ class _ContentState extends State<Content> {
         setState(() {
           for (var i = 0; i < result['data'].length; i++) {
             serviceList.add(Service(
-              id: result['data'][i]['_id'],
+                id: result['data'][i]['_id'],
                 title: result['data'][i]['title'],
                 sector: result['data'][i]['sector'].cast<String>(),
                 ratingCount: result['data'][i]['ratingCount'],
@@ -895,62 +995,61 @@ class _ContentState extends State<Content> {
         child: SizedBox(
           height: 750,
           width: 500,
-          child:serviceList.length > 0
-                  ? ListView.builder(
-                      itemCount: serviceList.length, //serviceList.length,
-                      itemBuilder: (context, index) {
-                        return Card(
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: ListTile(
-                              title: Text(
-                                serviceList[index].name,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                ),
-                              ),
-                              leading: CircleAvatar(
-                                child: Text(
-                                  'Aktif',
-                                  style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              trailing: TextButton(
-                                  onPressed: () =>deleteService(index, serviceList[index].id),
-                                  child:
-                                      Icon(Icons.delete, size: 32)),
+          child: serviceList.length > 0
+              ? ListView.builder(
+                  itemCount: serviceList.length, //serviceList.length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: ListTile(
+                          title: Text(
+                            serviceList[index].name,
+                            style: TextStyle(
+                              fontSize: 20,
                             ),
                           ),
-                        );
-                      },
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            'Şuanda aktif olarak kayıtlı bir hizmetiniz bulunmamaktadır.',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        TextButton(
-                            onPressed: null,
+                          leading: CircleAvatar(
                             child: Text(
-                              'Buraya tıklayarak anasayfaya dönebilirsiniz...',
+                              'Aktif',
                               style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold),
-                            ))
-                      ],
+                                  fontSize: 15, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          trailing: TextButton(
+                              onPressed: () => deleteService(
+                                  index, serviceList[index].id, context),
+                              child: Icon(Icons.delete, size: 32)),
+                        ),
+                      ),
+                    );
+                  },
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        'Şuanda aktif olarak kayıtlı bir hizmetiniz bulunmamaktadır.',
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      ),
                     ),
+                    TextButton(
+                        onPressed: null,
+                        child: Text(
+                          'Buraya tıklayarak anasayfaya dönebilirsiniz...',
+                          style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold),
+                        ))
+                  ],
+                ),
         ));
   }
 }
